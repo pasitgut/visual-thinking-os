@@ -1,65 +1,110 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect } from "react";
+import { MindmapBoard } from "@/components/flow/MindmapBoard";
+import { LoginButton } from "@/features/auth/components/LoginButton";
+import { useAuth } from "@/hooks/useAuth";
+import { useTaskStore } from "@/stores/useTaskStore";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, LogOut } from "lucide-react";
+
+import { ViewSwitcher } from "@/components/layout/ViewSwitcher";
+import { KanbanView } from "@/components/views/KanbanView";
+import { TimelineView } from "@/components/views/TimelineView";
+import { DocumentView } from "@/components/views/DocumentView";
+import { QuickCaptureOverlay } from "@/components/flow/QuickCaptureOverlay";
+import { InboxPanel } from "@/components/flow/InboxPanel";
+import dynamic from "next/dynamic";
+
+const TaskDetailPanel = dynamic(() => import("@/components/layout/TaskDetailPanel").then(mod => mod.TaskDetailPanel), {
+  ssr: false,
+  loading: () => null
+});
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+  const { user, loading: authLoading, logout } = useAuth();
+  const { initialize, isLoading: storeLoading, currentView } = useTaskStore();
+
+  useEffect(() => {
+    if (user) {
+      initialize(user.uid);
+    }
+  }, [user, initialize]);
+
+  if (authLoading || (user && storeLoading)) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-6 bg-background">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">Visual Mindmap</h1>
+          <p className="text-muted-foreground">
+            Manage your tasks visually and hierarchically.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <LoginButton />
+      </div>
+    );
+  }
+
+  const renderView = () => {
+    switch (currentView) {
+      case "mindmap":
+        return <MindmapBoard />;
+      case "kanban":
+        return <KanbanView />;
+      case "timeline":
+        return <TimelineView />;
+      case "document":
+        return <DocumentView />;
+      default:
+        return <MindmapBoard />;
+    }
+  };
+
+  return (
+    <main className="flex flex-col h-screen w-screen overflow-hidden">
+      {/* Header */}
+      <header className="flex h-14 items-center justify-between border-b px-4 sm:px-6 bg-background z-50">
+        <div className="flex items-center gap-4">
+          <span className="font-bold text-lg sm:text-xl truncate max-w-[120px] sm:max-w-none">
+            Visual Mindmap
+          </span>
+          <Separator orientation="vertical" className="h-6 hidden sm:block" />
+          <ViewSwitcher />
         </div>
-      </main>
-    </div>
+        
+        <div className="flex items-center gap-2 sm:gap-4">
+          <span className="text-sm text-muted-foreground hidden lg:inline-block">
+            {user.email}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className="gap-2 px-2 sm:px-3"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Logout</span>
+          </Button>
+        </div>
+      </header>
+
+      {/* View Area */}
+      <div className="flex-1 relative overflow-hidden bg-background">
+        {renderView()}
+      </div>
+
+      <TaskDetailPanel />
+      <InboxPanel />
+      <QuickCaptureOverlay />
+    </main>
   );
 }
