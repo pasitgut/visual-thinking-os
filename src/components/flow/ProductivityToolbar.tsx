@@ -1,23 +1,38 @@
 "use client";
 
+import {
+  Command,
+  Inbox,
+  LayoutGrid,
+  Maximize,
+  Plus,
+  Search,
+  Zap,
+} from "lucide-react";
 import { useReactFlow } from "reactflow";
 import { buttonVariants } from "@/components/ui/button";
-import { Plus, Search, LayoutGrid, Maximize, Command, Zap, Inbox } from "lucide-react";
-import { useTaskStore } from "@/stores/useTaskStore";
-import { useInboxStore } from "@/stores/useInboxStore";
+import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useInboxStore } from "@/stores/useInboxStore";
+import { useTaskStore } from "@/stores/useTaskStore";
 import { TemplateSelector } from "./TemplateSelector";
 
 export const ProductivityToolbar = () => {
   const { fitView } = useReactFlow();
-  const { applyLayout, createRootTask, addTask, nodes, interactionMode, setInteractionMode } = useTaskStore();
+  const {
+    applyLayout,
+    createRootTask,
+    addTask,
+    nodes,
+    interactionMode,
+    setInteractionMode,
+  } = useTaskStore();
   const { setOpen, isOpen: isInboxOpen } = useInboxStore();
 
   const handleCenter = () => {
@@ -39,7 +54,10 @@ export const ProductivityToolbar = () => {
           <Tooltip>
             <TooltipTrigger
               className={cn(
-                buttonVariants({ variant: isInboxOpen ? 'default' : 'ghost', size: "icon" }),
+                buttonVariants({
+                  variant: isInboxOpen ? "default" : "ghost",
+                  size: "icon",
+                }),
                 "h-9 w-9 cursor-pointer",
               )}
               onClick={() => setOpen(!isInboxOpen)}
@@ -54,13 +72,27 @@ export const ProductivityToolbar = () => {
           <Tooltip>
             <TooltipTrigger
               className={cn(
-                buttonVariants({ variant: interactionMode === 'brainstorm' ? 'default' : 'ghost', size: "icon" }),
+                buttonVariants({
+                  variant:
+                    interactionMode === "brainstorm" ? "default" : "ghost",
+                  size: "icon",
+                }),
                 "h-9 w-9 cursor-pointer",
-                interactionMode === 'brainstorm' && "bg-primary text-primary-foreground shadow-md scale-110"
+                interactionMode === "brainstorm" &&
+                  "bg-primary text-primary-foreground shadow-md scale-110",
               )}
-              onClick={() => setInteractionMode(interactionMode === 'brainstorm' ? 'standard' : 'brainstorm')}
+              onClick={() =>
+                setInteractionMode(
+                  interactionMode === "brainstorm" ? "standard" : "brainstorm",
+                )
+              }
             >
-              <Zap className={cn("h-4 w-4", interactionMode === 'brainstorm' && "fill-current")} />
+              <Zap
+                className={cn(
+                  "h-4 w-4",
+                  interactionMode === "brainstorm" && "fill-current",
+                )}
+              />
             </TooltipTrigger>
             <TooltipContent side="bottom">Brainstorm Mode</TooltipContent>
           </Tooltip>

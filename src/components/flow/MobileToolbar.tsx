@@ -1,9 +1,9 @@
+import { Inbox, Maximize, PlusCircle, ZoomIn, ZoomOut } from "lucide-react";
 import { useReactFlow } from "reactflow";
 import { Button } from "@/components/ui/button";
-import { Maximize, PlusCircle, ZoomIn, ZoomOut, Inbox } from "lucide-react";
-import { useTaskStore } from "@/stores/useTaskStore";
-import { useInboxStore } from "@/stores/useInboxStore";
 import { cn } from "@/lib/utils";
+import { useInboxStore } from "@/stores/useInboxStore";
+import { useTaskStore } from "@/stores/useTaskStore";
 
 export const MobileToolbar = () => {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
@@ -28,7 +28,10 @@ export const MobileToolbar = () => {
       <Button
         variant="ghost"
         size="icon"
-        className={cn("h-12 w-12 rounded-full", isInboxOpen && "bg-primary text-primary-foreground")}
+        className={cn(
+          "h-12 w-12 rounded-full",
+          isInboxOpen && "bg-primary text-primary-foreground",
+        )}
         onClick={() => setOpen(!isInboxOpen)}
       >
         <Inbox className="h-6 w-6" />
@@ -66,7 +69,7 @@ export const MobileToolbar = () => {
       </Button>
 
       <Button
-        variant="primary"
+        variant="default"
         size="icon"
         className="h-12 w-12 rounded-full shadow-md"
         onClick={handleAddRoot}

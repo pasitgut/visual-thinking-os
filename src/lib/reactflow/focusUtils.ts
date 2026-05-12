@@ -1,4 +1,4 @@
-import { Edge, Node } from "reactflow";
+import type { Edge, Node } from "reactflow";
 
 /**
  * Gets all node IDs in a subtree starting from a root node.
@@ -11,7 +11,9 @@ export const getSubtreeIds = (rootId: string, edges: Edge[]): Set<string> => {
     const currentId = queue.shift()!;
     // Only traverse hierarchy edges for focus mode
     const children = edges
-      .filter((edge) => edge.source === currentId && edge.data?.type === 'hierarchy')
+      .filter(
+        (edge) => edge.source === currentId && edge.data?.type === "hierarchy",
+      )
       .map((edge) => edge.target);
 
     for (const childId of children) {
@@ -31,7 +33,7 @@ export const getSubtreeIds = (rootId: string, edges: Edge[]): Set<string> => {
 export const getParentPath = (
   targetId: string,
   nodes: Node[],
-  edges: Edge[]
+  edges: Edge[],
 ): Node[] => {
   const path: Node[] = [];
   let currentId: string | undefined = targetId;
@@ -44,10 +46,10 @@ export const getParentPath = (
 
     // Find parent via hierarchy edge
     const parentEdge = edges.find(
-      (edge) => edge.target === currentId && edge.data?.type === 'hierarchy'
+      (edge) => edge.target === currentId && edge.data?.type === "hierarchy",
     );
     currentId = parentEdge?.source;
-    
+
     // Safety break to prevent infinite loops if graph has cycles
     if (path.length > 50) break;
   }

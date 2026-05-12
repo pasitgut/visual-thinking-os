@@ -1,19 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { ArrowRight, Inbox, X } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInboxStore } from "@/stores/useInboxStore";
-import { 
-  Inbox, 
-  X, 
-  ArrowRight,
-  Command,
-  Zap
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export const QuickCaptureOverlay = () => {
-  const { addItem, isOpen: isPanelOpen } = useInboxStore();
-  
+  const { addItem } = useInboxStore();
+
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,7 +19,7 @@ export const QuickCaptureOverlay = () => {
         e.preventDefault();
         setIsOpen(true);
       }
-      
+
       if (e.key === "Escape" && isOpen) {
         setIsOpen(false);
         setInputValue("");
@@ -61,16 +55,19 @@ export const QuickCaptureOverlay = () => {
             <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
               <Inbox className="h-4 w-4" />
             </div>
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary/70">Quick Capture to Inbox</span>
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary/70">
+              Quick Capture to Inbox
+            </span>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={() => setIsOpen(false)}
             className="p-1.5 hover:bg-primary/10 rounded-full transition-colors text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-2">
           <div className="flex items-center gap-3 px-4 py-4">
             <input
@@ -84,16 +81,22 @@ export const QuickCaptureOverlay = () => {
               }}
             />
           </div>
-          
+
           <div className="px-6 py-4 bg-muted/30 border-t border-border/50 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 opacity-50">
-                <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-[10px] font-mono border border-foreground/10">ESC</kbd>
-                <span className="text-[10px] uppercase font-bold tracking-wider">to close</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-[10px] font-mono border border-foreground/10">
+                  ESC
+                </kbd>
+                <span className="text-[10px] uppercase font-bold tracking-wider">
+                  to close
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Save to Inbox</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
+                Save to Inbox
+              </span>
               <div className="p-1.5 bg-primary text-primary-foreground rounded-lg">
                 <ArrowRight className="h-4 w-4" />
               </div>

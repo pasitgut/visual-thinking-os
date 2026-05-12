@@ -1,15 +1,15 @@
-import { Node, Edge } from "reactflow";
+import type { Edge, Node } from "reactflow";
 
 export type TaskStatus = "todo" | "in-progress" | "done";
-export type TaskType = 
-  | "root" 
-  | "parent" 
-  | "child" 
-  | "idea" 
-  | "task" 
-  | "problem" 
-  | "decision" 
-  | "question" 
+export type TaskType =
+  | "root"
+  | "parent"
+  | "child"
+  | "idea"
+  | "task"
+  | "problem"
+  | "decision"
+  | "question"
   | "reference";
 
 export type InteractionMode = "standard" | "brainstorm";
@@ -28,7 +28,7 @@ export type RelationshipType =
   | "blocks"
   | "inspired_by";
 
-export type ViewType = "mindmap" | "kanban" | "timeline" | "document";
+export type ViewType = "mindmap" | "kanban";
 
 export interface ChecklistItem {
   id: string;
@@ -58,7 +58,9 @@ export interface TaskNodeData {
   content?: TaskContent;
   createdAt?: number;
   updatedAt?: number;
-  onAddChild?: (parentId: string) => void;
+  isPinned?: boolean;
+  onAddChild: (parentId: string) => void;
+  onTogglePin?: (id: string) => void;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: TaskStatus) => void;
   onTitleChange?: (id: string, title: string) => void;
