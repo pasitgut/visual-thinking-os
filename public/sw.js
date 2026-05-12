@@ -1,8 +1,9 @@
-const CACHE_NAME = "visual-mindmap-v3";
+const CACHE_NAME = "visual-mindmap-v4";
 const ASSETS_TO_CACHE = [
   "/",
+  "/manifest",
+  "/manifest.webmanifest",
   "/favicon.ico",
-  "/manifest", // This matches Next.js App Router manifest path
   "/file.svg",
   "/globe.svg",
   "/next.svg",
@@ -11,35 +12,41 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener("install", (event) => {
-  console.log("[SW] Installing...");
+  console.log("[SW] Install event");
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log("[SW] Pre-caching assets");
-      // Use individual add calls or wrap in try-catch if using addAll 
-      // but here we just ensure the list is correct.
-      return cache.addAll(ASSETS_TO_CACHE).catch(err => {
-        console.error("[SW] Pre-cache failed. Check if all assets exist:", err);
+      console.log("[SW] Caching critical assets");
+      // Use individual add to prevent one failure from stopping all
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(url => cache.add(url))
+      ).then(results => {
+        const failed = results.filter(r => r.status === 'rejected');
+        if (failed.length > 0) {
+          console.warn(`[SW] ${failed.length} assets failed to cache during install`);
+        }
       });
-    }),
+    })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activating...");
+  console.log("[SW] Activate event");
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log("[SW] Deleting old cache:", cacheName);
-            return caches.delete(cacheName);
-          }
-        }),
-      );
-    }),
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              console.log("[SW] Deleting old cache:", cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+    ])
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -47,17 +54,15 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
   
-  // Only handle same-origin requests
+  // Skip cross-origin and HMR/API
   if (url.origin !== self.location.origin) return;
-
-  // Skip HMR and API
   if (url.pathname.startsWith("/_next/webpack-hmr") || url.pathname.startsWith("/api/")) return;
 
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
+      // Strategy: Stale-While-Revalidate
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
-          // If valid response, update cache
           if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -67,14 +72,14 @@ self.addEventListener("fetch", (event) => {
           return networkResponse;
         })
         .catch((error) => {
-          console.log("[SW] Fetch failed; returning offline content if available.", error);
+          console.log("[SW] Network failed, looking for fallback", url.pathname);
           
-          // If it's a navigation request (page load), return the cached root
+          // Navigation fallback: if user is offline and navigating to a page, show root "/"
           if (event.request.mode === "navigate") {
             return caches.match("/", { ignoreSearch: true });
           }
           
-          return cachedResponse; // Return whatever we have in cache
+          return cachedResponse || new Response("Offline content not available", { status: 503 });
         });
 
       return cachedResponse || fetchPromise;
