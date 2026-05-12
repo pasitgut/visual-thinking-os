@@ -67,10 +67,20 @@ export const RelationshipEdge = memo((props: EdgeProps<TaskEdgeData>) => {
     targetY,
     targetPosition,
   });
-
   const relationshipType = data?.type || "hierarchy";
   const config =
     RELATIONSHIP_CONFIG[relationshipType as keyof typeof RELATIONSHIP_CONFIG];
+
+  const edgeColor = selected ? "#3b82f6" : config.color;
+
+  // Dynamically update marker color to match edge color
+  const updatedMarkerEnd =
+    markerEnd && typeof markerEnd === "object"
+      ? {
+          ...markerEnd,
+          color: edgeColor,
+        }
+      : markerEnd;
 
   const removeEdge = () => {
     setEdges((es) => es.filter((e) => e.id !== id));
@@ -80,10 +90,10 @@ export const RelationshipEdge = memo((props: EdgeProps<TaskEdgeData>) => {
     <>
       <BaseEdge
         path={edgePath}
-        markerEnd={markerEnd}
+        markerEnd={updatedMarkerEnd}
         style={{
           ...style,
-          stroke: selected ? "#3b82f6" : config.color,
+          stroke: edgeColor,
           strokeWidth: selected ? 3 : 2,
           strokeDasharray: config.dashArray,
           transition: "all 0.3s",

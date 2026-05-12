@@ -5,6 +5,7 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
+  MarkerType,
   MiniMap,
   ReactFlowProvider,
   useReactFlow,
@@ -167,6 +168,11 @@ const BoardContent = () => {
         defaultEdgeOptions={{
           type: "relationship",
           animated: true,
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+          },
         }}
       >
         <Background
