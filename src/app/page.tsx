@@ -1,26 +1,18 @@
 "use client";
 
+import { Loader2, LogOut } from "lucide-react";
 import { useEffect } from "react";
+import { InboxPanel } from "@/components/flow/InboxPanel";
 import { MindmapBoard } from "@/components/flow/MindmapBoard";
+import { QuickCaptureOverlay } from "@/components/flow/QuickCaptureOverlay";
+import { SyncStatus } from "@/components/layout/SyncStatus";
+import { ViewSwitcher } from "@/components/layout/ViewSwitcher";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { KanbanView } from "@/components/views/KanbanView";
 import { LoginButton } from "@/features/auth/components/LoginButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useTaskStore } from "@/stores/useTaskStore";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Loader2, LogOut } from "lucide-react";
-
-import { ViewSwitcher } from "@/components/layout/ViewSwitcher";
-import { KanbanView } from "@/components/views/KanbanView";
-import { TimelineView } from "@/components/views/TimelineView";
-import { DocumentView } from "@/components/views/DocumentView";
-import { QuickCaptureOverlay } from "@/components/flow/QuickCaptureOverlay";
-import { InboxPanel } from "@/components/flow/InboxPanel";
-import dynamic from "next/dynamic";
-
-const TaskDetailPanel = dynamic(() => import("@/components/layout/TaskDetailPanel").then(mod => mod.TaskDetailPanel), {
-  ssr: false,
-  loading: () => null
-});
 
 export default function Home() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -60,10 +52,6 @@ export default function Home() {
         return <MindmapBoard />;
       case "kanban":
         return <KanbanView />;
-      case "timeline":
-        return <TimelineView />;
-      case "document":
-        return <DocumentView />;
       default:
         return <MindmapBoard />;
     }
@@ -80,8 +68,9 @@ export default function Home() {
           <Separator orientation="vertical" className="h-6 hidden sm:block" />
           <ViewSwitcher />
         </div>
-        
+
         <div className="flex items-center gap-2 sm:gap-4">
+          <SyncStatus />
           <span className="text-sm text-muted-foreground hidden lg:inline-block">
             {user.email}
           </span>
@@ -102,7 +91,6 @@ export default function Home() {
         {renderView()}
       </div>
 
-      <TaskDetailPanel />
       <InboxPanel />
       <QuickCaptureOverlay />
     </main>

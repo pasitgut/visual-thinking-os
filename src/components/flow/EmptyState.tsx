@@ -1,13 +1,7 @@
+import { Keyboard, MousePointer2, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Keyboard,
-  LayoutGrid,
-  MousePointer2,
-  PlusCircle,
-  Sparkles,
-} from "lucide-react";
-import { useTaskStore } from "@/stores/useTaskStore";
 import { BOARD_TEMPLATES } from "@/features/board/templates";
+import { useTaskStore } from "@/stores/useTaskStore";
 
 export const EmptyState = () => {
   const createRootTask = useTaskStore((state) => state.createRootTask);
@@ -49,6 +43,7 @@ export const EmptyState = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {BOARD_TEMPLATES.map((template) => (
               <button
+                type="button"
                 key={template.id}
                 onClick={() => applyTemplate(template.id)}
                 className="group flex flex-col items-center p-4 bg-card border rounded-2xl transition-all duration-300 hover:border-primary hover:bg-primary/5 hover:shadow-md"

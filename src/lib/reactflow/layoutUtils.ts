@@ -1,6 +1,6 @@
 import dagre from "dagre";
-import { Edge } from "reactflow";
-import { TaskNode } from "@/types/task";
+import type { Edge } from "reactflow";
+import type { TaskNode } from "@/types/task";
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));

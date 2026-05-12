@@ -1,8 +1,8 @@
 "use client";
 
+import { Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LogIn, Loader2 } from "lucide-react";
 
 export const LoginButton = () => {
   const { login, loading } = useAuth();

@@ -2,31 +2,54 @@
 
 ## Project Overview
 
-Project นี้คือ Visual Mindmap Task Manager สำหรับจัดการงานแบบ node-based โดยใช้:
-- Next.js (App Router)
-- Firebase Auth
-- Firebase Firestore (with Offline Persistence)
-- shadcn/ui + Tailwind CSS 4
-- React Flow (Custom Nodes with Auto-Resize)
-- PWA (Installable + Offline Shell)
+This project is a Visual Thinking Workspace designed to help users transform ideas into structured execution through a flexible node-based system.
 
-Core Concept:
-- ใช้ mindmap เป็น primary UX ร่วมกับระบบ Multi-view (Kanban, Timeline, Document)
-- ทุก node คือ task ที่แชร์ข้อมูลร่วมกันทุกมุมมอง
-- มีระบบ Board Templates เพื่อความรวดเร็วในการเริ่มต้น
-- รองรับการใช้งาน Offline (PWA + Firestore Persistence)
-- เน้น responsive + clean UX และความลื่นไหลในการใช้งาน
+The product combines:
+- visual mindmapping
+- structured task management
+- rapid idea capture
+- multi-view planning
+- knowledge organization
 
+into a single productivity environment optimized for clarity, focus, and cognitive flow.
+
+Core Philosophy:
+- thinking should feel spatial, connected, and fluid
+- execution should emerge naturally from organized thoughts
+- the interface should reduce cognitive friction, not increase it
+
+The system is built around a shared graph-based data model where:
+- every node represents a meaningful unit of thinking
+- the same data can be viewed through multiple perspectives
+- users can move seamlessly between brainstorming, planning, and execution
+
+Primary UX Principles:
+- visual-first interaction
+- minimal friction
+- keyboard-friendly workflows
+- responsive and mobile-capable experience
+- offline reliability
+- scalable mental organization
+
+The platform is designed as a foundation for a future Visual Thinking OS rather than a traditional task manager.
 ---
 
 # Product Goal
 
-ช่วยผู้ใช้:
-- วางแผนงานแบบ visual thinking และสลับมุมมองตามความเหมาะสมของเนื้องาน
-- แตกงานใหญ่เป็นงานย่อยผ่านลำดับขั้น (Root -> Parent -> Child)
-- เห็น dependency และ hierarchy ของงานได้อย่างชัดเจนผ่าน Mindmap หรือ Document view
-- ติดตามความคืบหน้าผ่าน Kanban และ Timeline view
-- จัดการ project ส่วนตัวได้ง่ายขึ้นทั้งบน Desktop และ Mobile
+Help users:
+- externalize thoughts quickly and clearly
+- organize complex ideas visually
+- break down large goals into actionable structures
+- navigate between brainstorming and execution without losing context
+- maintain focus while working with large interconnected information spaces
+
+The product should support different modes of thinking:
+- rapid ideation
+- structured planning
+- task execution
+- reflection and review
+
+The long-term goal is to create a calm, spatial, and cognitively ergonomic productivity system that users can rely on daily as an external thinking environment.
 
 ---
 
@@ -41,7 +64,7 @@ Core Concept:
 | Database | Firestore (Enabled Offline Persistence) |
 | Auth | Firebase Auth |
 | PWA | Web Manifest + Service Worker (Custom Cache Strategy) |
-| Utilities | date-fns, lodash, uuid |
+| Utilities | date-fns, lodash, uuid, dnd-kit |
 | Hosting | Vercel |
 
 ---
@@ -70,12 +93,9 @@ Core Concept:
 
 ### Multi-View System
 - Mindmap View (Primary)
-- Kanban View (Status tracking)
-- Timeline View (Chronological audit)
-- Document View (Hierarchical outline)
+- Kanban View (Modern dnd-kit powered task board with Drag Overlay)
 
 ### Rich Node Content System
-- Side Panel for detailed editing
 - Markdown notes with live preview
 - Interactive Checklist items
 - Link management with titles and URLs
@@ -93,19 +113,31 @@ Core Concept:
 - Breadcrumb navigation for orientation
 - Automatic viewport centering on focused subtree
 
+### Quick Capture Inbox System
+- Rapid thought capture (Alt + I shortcut)
+- Decoupled storage for uncategorized ideas
+- Dedicated Inbox Panel for processing items into the board
+- Seamless transition from raw thought to organized task
+
+### Sync & Persistence System
+- Real-time Cloud Sync with visual status indicator (Synced / Saving / Error)
+- Full data persistence (Types, Colors, Hierarchy, Content)
+- Firestore Offline Persistence for reliable work in all conditions
+
 ### Semantic Node Type System
 - Config-driven types: Action, Idea, Issue, Decision, Question, Reference
-- Type-specific visual styling and icons
-- Visual cues for quick identification
-- Scalable architecture for future types
+- User-selectable Color Overrides (priority over type defaults)
+- Clean UI: Removed redundant structural roles (Parent/Child) from toolbar
+- Visual cues and icons for instant recognition
 
 ### Mindmap Board
-- Create / Delete / Edit nodes
-- Visual Hierarchy (Root, Parent, Child design variants)
-- Node Toolbar (Flat UI for immediate access)
-- Node Resizing (Manual + Auto-resize based on text)
-- Drag node / Zoom / Pan / Center Viewport
-- Auto Layout (Dagre-driven)
+- Fixed "Start" Node: Immutable root for project clarity
+- Simplified Start Toolbar: Focused only on adding children
+- Interaction: Double-click to edit title (Desktop & Mobile)
+- **Manual Pinning**: User-controlled node positioning (Toggle via toolbar) to preserve spatial memory
+- Mobile Optimized: Large touch targets and simplified toolbars
+- Node Resizing: Manual + Auto-resize based on text
+- Auto Layout (Dagre-driven): Respects pinned nodes and avoids mental map disruption
 
 ### Board Templates
 - Project Planning, Study Roadmap, Startup MVP, Weekly Planning
@@ -119,6 +151,8 @@ Core Concept:
 - Enhanced touch targets for Mobile
 - Floating toolbars for small screens
 - View switcher integrated in Header
+- Mobile Kanban: Horizontal column swipe (85% width) and full-page vertical scroll
+- Responsive: Enhanced touch targets for mobile and view switcher in header
 
 ---
 
@@ -144,7 +178,7 @@ src/
 │   ├── ui/          # shadcn components
 │   ├── flow/        # React Flow containers & toolbars
 │   ├── nodes/       # Custom Node implementations
-│   ├── views/       # Kanban, Timeline, Document view components
+│   ├── views/       # Kanban view components
 │   └── layout/      # Layout-specific (ViewSwitcher, PWA Reg, etc.)
 ├── features/
 │   ├── auth/        # Auth logic & components

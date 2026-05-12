@@ -1,50 +1,52 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
   MiniMap,
-  type NodeTypes,
   ReactFlowProvider,
+  useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { TaskNode } from "@/components/nodes/TaskNode";
+
 import { RelationshipEdge } from "@/components/flow/RelationshipEdge";
-import { useTaskStore } from "@/stores/useTaskStore";
+import { TaskNode } from "@/components/nodes/TaskNode";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { MobileToolbar } from "./MobileToolbar";
 import { useMobile } from "@/hooks/useMobile";
+import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
+import { useTaskStore } from "@/stores/useTaskStore";
+import { BrainstormOverlay } from "./BrainstormOverlay";
 import { EmptyState } from "./EmptyState";
+import { FocusBreadcrumbs } from "./FocusBreadcrumbs";
+import { MobileToolbar } from "./MobileToolbar";
 import { ProductivityToolbar } from "./ProductivityToolbar";
 import { ShortcutLegend } from "./ShortcutLegend";
-import { BrainstormOverlay } from "./BrainstormOverlay";
-import { FocusBreadcrumbs } from "./FocusBreadcrumbs";
-import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
-import { useReactFlow } from "reactflow";
-import { useEffect } from "react";
-
-const nodeTypes = {
-  task: TaskNode,
-};
-
-const edgeTypes = {
-  relationship: RelationshipEdge,
-};
 
 const BoardContent = () => {
-  const { 
-    nodes, 
-    edges, 
-    onNodesChange, 
-    onEdgesChange, 
-    onConnect, 
-    setDetailPanelOpen,
-    focusNodeId,
-    setFocusNodeId
-  } = useTaskStore();
+  const nodeTypes = useMemo(
+    () => ({
+      task: TaskNode,
+    }),
+    [],
+  );
 
+  const edgeTypes = useMemo(
+    () => ({
+      relationship: RelationshipEdge,
+    }),
+    [],
+  );
+
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    focusNodeId,
+  } = useTaskStore();
   const { fitView } = useReactFlow();
   const isMobile = useMobile();
 
@@ -56,24 +58,27 @@ const BoardContent = () => {
 
   const displayNodes = useMemo(() => {
     if (!visibleNodeIds) return nodes;
-    return nodes.map(node => ({
+    return nodes.map((node) => ({
       ...node,
-      style: { 
-        ...node.style, 
+      style: {
+        ...node.style,
         opacity: visibleNodeIds.has(node.id) ? 1 : 0.05,
-        pointerEvents: visibleNodeIds.has(node.id) ? 'all' : 'none'
-      } as any
+        pointerEvents: visibleNodeIds.has(node.id) ? "all" : "none",
+      } as React.CSSProperties,
     }));
   }, [nodes, visibleNodeIds]);
 
   const displayEdges = useMemo(() => {
     if (!visibleNodeIds) return edges;
-    return edges.map(edge => ({
+    return edges.map((edge) => ({
       ...edge,
-      style: { 
-        ...edge.style, 
-        opacity: (visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)) ? 1 : 0.05 
-      }
+      style: {
+        ...edge.style,
+        opacity:
+          visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)
+            ? 1
+            : 0.05,
+      },
     }));
   }, [edges, visibleNodeIds]);
 
@@ -81,14 +86,14 @@ const BoardContent = () => {
   useEffect(() => {
     if (focusNodeId && visibleNodeIds) {
       setTimeout(() => {
-        fitView({ 
-          nodes: Array.from(visibleNodeIds).map(id => ({ id })), 
-          padding: 0.3, 
-          duration: 800 
+        fitView({
+          nodes: Array.from(visibleNodeIds).map((id) => ({ id })),
+          padding: 0.3,
+          duration: 800,
         });
       }, 50);
     }
-  }, [focusNodeId, visibleNodeIds, fitView]);
+  }, [visibleNodeIds, fitView, focusNodeId]);
 
   useKeyboardShortcuts();
 
@@ -102,7 +107,6 @@ const BoardContent = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onNodeClick={() => setDetailPanelOpen(true)}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
@@ -118,7 +122,9 @@ const BoardContent = () => {
         }}
       >
         <Background
-          variant={focusNodeId ? BackgroundVariant.Lines : BackgroundVariant.Dots}
+          variant={
+            focusNodeId ? BackgroundVariant.Lines : BackgroundVariant.Dots
+          }
           gap={focusNodeId ? 40 : 20}
           size={1}
           className="opacity-[0.4] dark:opacity-[0.1]"

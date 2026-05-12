@@ -1,30 +1,25 @@
 "use client";
 
-import React, { memo, useState, useEffect, useRef } from "react";
+import { CheckCircle2, Circle, Clock, Pin } from "lucide-react";
+import type React from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import {
   Handle,
+  type NodeProps,
   Position,
-  NodeProps,
-  useStore,
   NodeToolbar as RFNodeToolbar,
-  NodeResizer,
+  useStore,
   useUpdateNodeInternals,
 } from "reactflow";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  CheckCircle2,
-  Circle,
-  Clock,
-  Target,
-  Folder,
-  Hash,
-} from "lucide-react";
-import { TaskNodeData, TaskStatus, TaskColor, TaskType } from "@/types/task";
+import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/useTaskStore";
+import type {
+  TaskColor,
+  TaskNodeData,
+  TaskStatus,
+} from "@/types/task";
 import { NodeToolbar } from "./NodeToolbar";
-
-import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 
 const StatusIcon = ({
   status,
@@ -45,6 +40,25 @@ const StatusIcon = ({
     default:
       return <Circle className={cn(size, "text-muted-foreground/40")} />;
   }
+};
+
+const COLOR_OVERRIDES: Record<Exclude<TaskColor, "default">, string> = {
+  blue: "border-blue-400 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-900/20 dark:text-blue-300",
+  green:
+    "border-emerald-400 bg-emerald-50 text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-900/20 dark:text-emerald-300",
+  purple:
+    "border-purple-400 bg-purple-50 text-purple-700 dark:border-purple-700/50 dark:bg-purple-900/20 dark:text-purple-300",
+  pink: "border-pink-400 bg-pink-50 text-pink-700 dark:border-pink-700/50 dark:bg-pink-900/20 dark:text-pink-300",
+  yellow:
+    "border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-700/50 dark:bg-amber-900/20 dark:text-amber-300",
+};
+
+const ROOT_COLOR_OVERRIDES: Record<Exclude<TaskColor, "default">, string> = {
+  blue: "bg-blue-600 border-blue-400",
+  green: "bg-emerald-600 border-emerald-400",
+  purple: "bg-purple-600 border-purple-400",
+  pink: "bg-pink-600 border-pink-400",
+  yellow: "bg-amber-500 border-amber-400",
 };
 
 export const TaskNode = memo(
@@ -92,12 +106,12 @@ export const TaskNode = memo(
         textareaRef.current.select();
         // Auto-adjust height
         textareaRef.current.style.height = "auto";
-        textareaRef.current.style.height =
-          textareaRef.current.scrollHeight + "px";
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
       }
     }, [isEditing]);
 
     const handleStartEditing = () => {
+      if (nodeType === "root") return;
       setIsEditing(true);
       setEditingNodeId(id);
     };
@@ -139,7 +153,7 @@ export const TaskNode = memo(
         onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => {
           setTitle(e.target.value);
           e.target.style.height = "auto";
-          e.target.style.height = e.target.scrollHeight + "px";
+          e.target.style.height = `${e.target.scrollHeight}px`;
         },
         onBlur: handleSave,
         onKeyDown: onKeyDown,
@@ -151,8 +165,12 @@ export const TaskNode = memo(
         return (
           <div
             className={cn(
-              "relative w-full h-auto min-h-[100px] min-w-[240px] rounded-3xl p-6 transition-all duration-300 flex items-center gap-5 border-4 shadow-2xl overflow-hidden",
-              registryEntry.className,
+              "relative w-full h-auto min-h-[100px] min-w-[240px] rounded-3xl p-6 transition-all duration-300 flex items-center gap-5 border-4 shadow-2xl overflow-hidden text-white",
+              nodeColor === "default"
+                ? registryEntry.className
+                : ROOT_COLOR_OVERRIDES[
+                    nodeColor as Exclude<TaskColor, "default">
+                  ],
               selected
                 ? "scale-105 border-white/40 ring-8 ring-primary/20"
                 : "border-transparent",
@@ -161,7 +179,7 @@ export const TaskNode = memo(
             <div className="p-3 bg-white/20 rounded-2xl flex-shrink-0">
               <Icon className="h-8 w-8 text-white" />
             </div>
-            <div className="flex-1 text-left text-white">
+            <div className="flex-1 text-left">
               {isEditing ? (
                 <textarea
                   {...commonTextareaProps}
@@ -172,11 +190,8 @@ export const TaskNode = memo(
                   rows={1}
                 />
               ) : (
-                <span
-                  className="text-xl font-black tracking-tight cursor-text select-none whitespace-pre-wrap break-words w-full"
-                  onDoubleClick={handleStartEditing}
-                >
-                  {data.title}
+                <span className="text-xl font-black tracking-tight cursor-default select-none whitespace-pre-wrap break-words w-full">
+                  Start
                 </span>
               )}
             </div>
@@ -189,30 +204,46 @@ export const TaskNode = memo(
         <div
           className={cn(
             "w-full h-auto min-h-[48px] min-w-[160px] rounded-xl border-2 px-3 py-2.5 transition-all duration-300 flex items-center gap-3 shadow-md",
-            registryEntry.className,
+            nodeColor === "default"
+              ? registryEntry.className
+              : COLOR_OVERRIDES[nodeColor as Exclude<TaskColor, "default">],
             selected
               ? "border-primary ring-4 ring-primary/10 scale-105 z-10"
               : "border-transparent",
-            nodeType === 'idea' && "border-dashed",
+            nodeType === "idea" && "border-dashed",
           )}
         >
-          <div className={cn(
-            "p-1.5 rounded-lg flex-shrink-0",
-            nodeType === "task" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-            nodeType === "problem" && "bg-pink-500/10 text-pink-600 dark:text-pink-400",
-            nodeType === "decision" && "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-            nodeType === "question" && "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-            nodeType === "reference" && "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
-            nodeType === "idea" && "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-            nodeType === "child" && "bg-zinc-500/10 text-zinc-500",
-            nodeType === "parent" && "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-          )}>
+          <div
+            className={cn(
+              "p-1.5 rounded-lg flex-shrink-0",
+              nodeColor !== "default"
+                ? "bg-black/5 dark:bg-white/5"
+                : cn(
+                    nodeType === "task" &&
+                      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                    nodeType === "problem" &&
+                      "bg-pink-500/10 text-pink-600 dark:text-pink-400",
+                    nodeType === "decision" &&
+                      "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+                    nodeType === "question" &&
+                      "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+                    nodeType === "reference" &&
+                      "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
+                    nodeType === "idea" &&
+                      "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                    nodeType === "child" && "bg-zinc-500/10 text-zinc-500",
+                    nodeType === "parent" &&
+                      "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+                  ),
+            )}
+          >
             <Icon className="h-4 w-4" />
           </div>
-          
+
           <div className="flex-1 flex items-center gap-2">
-            {!isVeryZoomedOut && nodeType === 'task' && (
+            {!isVeryZoomedOut && nodeType === "task" && (
               <button
+                type="button"
                 onClick={handleStatusToggle}
                 className="hover:scale-110 active:scale-90 transition-transform flex-shrink-0"
               >
@@ -229,7 +260,8 @@ export const TaskNode = memo(
                 rows={1}
               />
             ) : (
-              <span
+              <button
+                type="button"
                 className={cn(
                   "text-sm font-semibold whitespace-pre-wrap break-words w-full cursor-text py-0.5 leading-relaxed",
                   data.status === "done" &&
@@ -238,7 +270,7 @@ export const TaskNode = memo(
                 onDoubleClick={handleStartEditing}
               >
                 {data.title}
-              </span>
+              </button>
             )}
           </div>
         </div>
@@ -253,19 +285,19 @@ export const TaskNode = memo(
           isDimmed ? "opacity-30 blur-[1px]" : "opacity-100 blur-0",
         )}
       >
-        {selected && (
+        {/* {selected && (
           <NodeResizer
             minWidth={
-              nodeType === "root" ? 280 : nodeType === "parent" ? 240 : 160
+              nodeType === "root" ? 280 : 160
             }
             minHeight={
-              nodeType === "root" ? 120 : nodeType === "parent" ? 100 : 48
+              nodeType === "root" ? 120 : 48
             }
             isVisible={selected}
             lineClassName="border-primary"
             handleClassName="h-3 w-3 bg-white border-2 border-primary rounded-full shadow-md"
           />
-        )}
+        )} */}
 
         {selected && !isEditing && (
           <RFNodeToolbar isVisible={true} position={Position.Top} offset={24}>
@@ -273,13 +305,21 @@ export const TaskNode = memo(
               id={id}
               type={nodeType}
               color={nodeColor}
+              isPinned={data.isPinned}
               onAddChild={() => data.onAddChild?.(id)}
               onDelete={() => data.onDelete?.(id)}
               onTypeChange={(t) => data.onTypeChange?.(id, t)}
               onColorChange={(c) => data.onColorChange?.(id, c)}
+              onTogglePin={() => data.onTogglePin?.(id)}
               isRoot={id === "root"}
             />
           </RFNodeToolbar>
+        )}
+
+        {data.isPinned && !selected && (
+          <div className="absolute -top-2 -right-2 bg-amber-500 text-white p-1 rounded-full shadow-lg z-20 animate-in zoom-in-50 duration-300">
+            <Pin className="h-2.5 w-2.5 fill-current" />
+          </div>
         )}
 
         {nodeType !== "root" && (
@@ -288,7 +328,9 @@ export const TaskNode = memo(
             position={Position.Top}
             className={cn(
               "!w-3 !h-3 !bg-primary border-2 border-background transition-all",
-              (isVeryZoomedOut || (nodeType === 'idea' && !selected)) ? "opacity-0" : "opacity-100",
+              isVeryZoomedOut || (nodeType === "idea" && !selected)
+                ? "opacity-0"
+                : "opacity-100",
             )}
           />
         )}
@@ -300,7 +342,9 @@ export const TaskNode = memo(
           position={Position.Bottom}
           className={cn(
             "!w-3 !h-3 !bg-primary border-2 border-background transition-all",
-            (isVeryZoomedOut || (nodeType === 'idea' && !selected)) ? "opacity-0" : "opacity-100",
+            isVeryZoomedOut || (nodeType === "idea" && !selected)
+              ? "opacity-0"
+              : "opacity-100",
           )}
         />
       </div>

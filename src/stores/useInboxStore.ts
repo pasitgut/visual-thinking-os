@@ -1,7 +1,7 @@
-import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import { InboxItem } from "@/types/task";
+import { create } from "zustand";
 import { InboxService } from "@/services/inboxService";
+import type { InboxItem } from "@/types/task";
 
 interface InboxState {
   items: InboxItem[];
@@ -49,10 +49,10 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     const userId = (window as any).userId;
     if (!userId) return;
 
-    const itemToRemove = get().items.find(i => i.id === id);
+    const itemToRemove = get().items.find((i) => i.id === id);
     if (!itemToRemove) return;
 
-    set({ items: get().items.filter(i => i.id !== id) });
+    set({ items: get().items.filter((i) => i.id !== id) });
     await InboxService.removeInboxItem(userId, itemToRemove);
   },
 }));

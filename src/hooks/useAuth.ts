@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthService } from "@/services/authService";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export const useAuth = () => {
   const { user, loading, error, setUser, setLoading, setError } =
@@ -19,8 +19,8 @@ export const useAuth = () => {
     setError(null);
     try {
       await AuthService.loginWithGoogle();
-    } catch (err: any) {
-      setError(err.message || "Failed to login");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to login");
     } finally {
       setLoading(false);
     }
@@ -30,8 +30,8 @@ export const useAuth = () => {
     setLoading(true);
     try {
       await AuthService.logout();
-    } catch (err: any) {
-      setError(err.message || "Failed to logout");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to logout");
     } finally {
       setLoading(false);
     }

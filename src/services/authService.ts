@@ -1,8 +1,8 @@
 import {
+  onAuthStateChanged,
   signInWithPopup,
   signOut,
-  onAuthStateChanged,
-  User,
+  type User,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase/auth";
 
