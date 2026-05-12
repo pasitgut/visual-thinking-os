@@ -77,7 +77,7 @@ export const RelationshipEdge = memo((props: EdgeProps<TaskEdgeData>) => {
   const updatedMarkerEnd =
     markerEnd && typeof markerEnd === "object"
       ? {
-          ...markerEnd,
+          ...(markerEnd as any),
           color: edgeColor,
         }
       : markerEnd;
