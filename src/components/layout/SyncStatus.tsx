@@ -1,10 +1,38 @@
 "use client";
 
-import { AlertCircle, Cloud, RefreshCw } from "lucide-react";
+import { AlertCircle, Cloud, CloudOff, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTaskStore } from "@/stores/useTaskStore";
 
 export const SyncStatus = () => {
   const saveStatus = useTaskStore((state) => state.saveStatus);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true,
+  );
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  if (!isOnline) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive/10 border border-destructive/20 animate-pulse">
+        <CloudOff className="h-3.5 w-3.5 text-destructive" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-destructive/80">
+          Offline Mode
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50">

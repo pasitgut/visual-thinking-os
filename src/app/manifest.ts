@@ -6,6 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "VisualMindmap",
     description: "A visual task manager using mindmaps for better productivity",
     start_url: "/",
+    scope: "/",
+    id: "/",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#000000",
