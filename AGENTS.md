@@ -149,7 +149,8 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 - **Smart Framing**: Automatically centers viewport on the centroid of parent and child during creation to preserve visual context.
 - **Color Inheritance**: Children automatically inherit parent colors for semantic consistency.
 - **Inline Editing UX**: Auto-resizing textareas, instant focus on creation, and cursor stability.
-- **Search Palette (Cmd+K)**: Instant node search and jump-to-focus navigation.
+- **Search Palette (Cmd+K)**: Instant node search and jump-to-focus navigation. Includes **Recent History** section for rapid context switching.
+- **Spatial Bookmarks**: Save and jump to specific camera views using `Alt + 1-9` (Jump) and `Alt + Ctrl + 1-9` (Set). Solves the "getting lost" problem in massive boards.
 - **Root Indicator**: Subtle "Return to Start" guidance when the root node is off-screen.
 - **Zoom-to-Thinking**: Double-click canvas to instantly fit and reorient the view.
 - **Progressive Disclosure**: Node toolbars and connection handles only appear when selected or hovered, reducing visual noise.

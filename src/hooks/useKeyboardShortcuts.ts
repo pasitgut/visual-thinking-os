@@ -13,9 +13,11 @@ export const useKeyboardShortcuts = () => {
     setEditingNodeId,
     nodes,
     edges,
+    setBookmark,
+    bookmarks,
   } = useTaskStore();
 
-  const { setNodes, fitView, setCenter } = useReactFlow();
+  const { setNodes, fitView, setCenter, getViewport, setViewport } = useReactFlow();
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -35,6 +37,28 @@ export const useKeyboardShortcuts = () => {
 
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const modifierKey = isMac ? event.metaKey : event.ctrlKey;
+
+      // Spatial Bookmarks (Alt + 1-9)
+      if (event.altKey && event.key >= "1" && event.key <= "9") {
+        event.preventDefault();
+        const key = event.key;
+        
+        if (modifierKey) {
+          // Set Bookmark: Alt + Ctrl/Cmd + 1-9
+          const { x, y, zoom } = getViewport();
+          setBookmark(key, { x, y, zoom });
+        } else {
+          // Jump to Bookmark: Alt + 1-9
+          const bookmark = bookmarks[key];
+          if (bookmark) {
+            setViewport(
+              { x: bookmark.x, y: bookmark.y, zoom: bookmark.zoom },
+              { duration: 800 }
+            );
+          }
+        }
+        return;
+      }
 
       // Cmd/Ctrl + S -> Manual Save
       if (modifierKey && event.key === "s") {
@@ -184,6 +208,10 @@ export const useKeyboardShortcuts = () => {
       setNodes,
       fitView,
       setCenter,
+      setBookmark,
+      bookmarks,
+      getViewport,
+      setViewport,
     ],
   );
 
