@@ -1,8 +1,8 @@
-const CACHE_NAME = "visual-mindmap-v1";
+const CACHE_NAME = "visual-mindmap-v3";
 const ASSETS_TO_CACHE = [
   "/",
   "/favicon.ico",
-  "/manifest",
+  "/manifest", // This matches Next.js App Router manifest path
   "/file.svg",
   "/globe.svg",
   "/next.svg",
@@ -11,25 +11,30 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener("install", (event) => {
+  console.log("[SW] Installing...");
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log("Opened cache");
-      return cache.addAll(ASSETS_TO_CACHE);
+      console.log("[SW] Pre-caching assets");
+      // Use individual add calls or wrap in try-catch if using addAll 
+      // but here we just ensure the list is correct.
+      return cache.addAll(ASSETS_TO_CACHE).catch(err => {
+        console.error("[SW] Pre-cache failed. Check if all assets exist:", err);
+      });
     }),
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
+  console.log("[SW] Activating...");
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log("Deleting old cache:", cacheName);
+            console.log("[SW] Deleting old cache:", cacheName);
             return caches.delete(cacheName);
           }
-          return null;
         }),
       );
     }),
@@ -38,61 +43,41 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Only handle GET requests
   if (event.request.method !== "GET") return;
 
-  // Skip chrome-extension, firebase, etc
   const url = new URL(event.request.url);
-  if (
-    url.origin !== self.location.origin ||
-    url.pathname.startsWith("/_next/webpack-hmr") ||
-    url.pathname.startsWith("/api/")
-  ) {
-    return;
-  }
+  
+  // Only handle same-origin requests
+  if (url.origin !== self.location.origin) return;
+
+  // Skip HMR and API
+  if (url.pathname.startsWith("/_next/webpack-hmr") || url.pathname.startsWith("/api/")) return;
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached response, but update cache in the background (Stale-While-Revalidate)
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse);
-              });
-            }
-          })
-          .catch(() => {
-            /* ignore background fetch errors */
-          });
-        return cachedResponse;
-      }
-
-      return fetch(event.request)
+    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
-          if (
-            !networkResponse ||
-            networkResponse.status !== 200 ||
-            networkResponse.type !== "basic"
-          ) {
-            return networkResponse;
+          // If valid response, update cache
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
           }
-
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
           return networkResponse;
         })
-        .catch(() => {
-          // If network fails and no cache, check if it's a navigation request
+        .catch((error) => {
+          console.log("[SW] Fetch failed; returning offline content if available.", error);
+          
+          // If it's a navigation request (page load), return the cached root
           if (event.request.mode === "navigate") {
-            return caches.match("/");
+            return caches.match("/", { ignoreSearch: true });
           }
-          return null;
+          
+          return cachedResponse; // Return whatever we have in cache
         });
-    }),
+
+      return cachedResponse || fetchPromise;
+    })
   );
 });
