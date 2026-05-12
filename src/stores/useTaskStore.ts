@@ -37,6 +37,7 @@ interface TaskState {
   focusNodeId: string | null;
   selectedNodeIds: string[];
   editingNodeId: string | null;
+  isSearchOpen: boolean;
   isLoading: boolean;
   saveStatus: "saved" | "saving" | "error";
   onNodesChange: OnNodesChange;
@@ -47,7 +48,9 @@ interface TaskState {
   setFocusNodeId: (id: string | null) => void;
   setSelectedNodeIds: (ids: string[]) => void;
   setEditingNodeId: (id: string | null) => void;
+  setSearchOpen: (open: boolean) => void;
   addChild: (parentId: string, type?: TaskType) => void;
+  addSibling: (nodeId: string) => void;
   addTask: (status?: TaskStatus, type?: TaskType) => void;
   deleteNode: (id: string) => void;
   updateNodeTitle: (id: string, title: string) => void;
@@ -57,12 +60,14 @@ interface TaskState {
   updateNodeContent: (id: string, content: Partial<TaskContent>) => void;
   updateEdgeType: (id: string, type: RelationshipType) => void;
   toggleNodePin: (id: string) => void;
+  toggleNodeCollapse: (id: string) => void;
   initialize: (userId: string) => Promise<void>;
   createRootTask: () => void;
   createExampleBoard: () => void;
   saveToFirestore: (userId: string) => void;
   applyLayout: () => void;
   applyTemplate: (templateId: string) => void;
+  selectNode: (id: string) => void;
 }
 
 const DEFAULT_NODES: TaskNode[] = [
@@ -71,7 +76,7 @@ const DEFAULT_NODES: TaskNode[] = [
     type: "task",
     position: { x: 0, y: 0 },
     data: {
-      title: "Start",
+      title: "Main Idea",
       status: "todo",
       type: "root",
       color: "default",
@@ -116,6 +121,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
         onContentChange: (id: string, content: Partial<TaskContent>) =>
           get().updateNodeContent(id, content),
         onTogglePin: (id: string) => get().toggleNodePin(id),
+        onToggleCollapse: (id: string) => get().toggleNodeCollapse(id),
       },
     }));
 
@@ -127,6 +133,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
     focusNodeId: null,
     selectedNodeIds: [],
     editingNodeId: null,
+    isSearchOpen: false,
     isLoading: true,
     saveStatus: "saved",
 
@@ -134,23 +141,64 @@ export const useTaskStore = create<TaskState>((set, get) => {
     setInteractionMode: (mode: InteractionMode) =>
       set({ interactionMode: mode }),
     setFocusNodeId: (id: string | null) => set({ focusNodeId: id }),
+    setSearchOpen: (open: boolean) => set({ isSearchOpen: open }),
 
     onNodesChange: (changes: NodeChange[]) => {
       const currentNodes = get().nodes;
-      const updatedNodes = applyNodeChanges(
-        changes,
-        currentNodes,
-      ) as TaskNode[];
-      set({ nodes: updatedNodes });
+      const currentEdges = get().edges;
 
-      if (changes.some((c) => c.type === "select")) {
-        const selectedIds = updatedNodes
+      // Handle Subtree Dragging logic
+      let updatedNodes = [...currentNodes];
+      
+      const positionChanges = changes.filter(
+        (c) => c.type === "position" && c.dragging,
+      );
+
+      if (positionChanges.length === 1) {
+        const change = positionChanges[0] as any;
+        const node = currentNodes.find((n) => n.id === change.id);
+        
+        if (node && change.position) {
+          const dx = change.position.x - node.position.x;
+          const dy = change.position.y - node.position.y;
+          
+          if (dx !== 0 || dy !== 0) {
+            const { getSubtreeIds } = require("@/lib/reactflow/focusUtils");
+            const subtreeIds = getSubtreeIds(node.id, currentEdges);
+            subtreeIds.delete(node.id); // Don't move the node itself twice
+
+            updatedNodes = updatedNodes.map((n) => {
+              if (subtreeIds.has(n.id)) {
+                return {
+                  ...n,
+                  position: {
+                    x: n.position.x + dx,
+                    y: n.position.y + dy,
+                  },
+                };
+              }
+              return n;
+            });
+          }
+        }
+      }
+
+      const finalNodes = applyNodeChanges(changes, updatedNodes) as TaskNode[];
+      
+      const selectionChange = changes.find((c) => c.type === "select");
+      
+      if (selectionChange) {
+        const selectedIds = finalNodes
           .filter((n) => n.selected)
           .map((n) => n.id);
+        
         set({
+          nodes: finalNodes,
           selectedNodeIds: selectedIds,
-          editingNodeId: null,
+          editingNodeId: selectedIds.length === 0 ? null : get().editingNodeId,
         });
+      } else {
+        set({ nodes: finalNodes });
       }
 
       if (changes.some((c) => c.type === "position")) {
@@ -177,7 +225,42 @@ export const useTaskStore = create<TaskState>((set, get) => {
     },
 
     setSelectedNodeIds: (ids: string[]) => {
-      set({ selectedNodeIds: ids });
+      const nextNodes = get().nodes.map((node) => ({
+        ...node,
+        selected: ids.includes(node.id),
+      }));
+      set({ nodes: nextNodes, selectedNodeIds: ids });
+    },
+
+    selectNode: (id: string) => {
+      const { nodes, edges } = get();
+      const ancestors = new Set<string>();
+      let currentId = id;
+      
+      while (currentId) {
+        const parentEdge = edges.find((e) => e.target === currentId && e.data?.type === "hierarchy");
+        if (parentEdge) {
+          ancestors.add(parentEdge.source);
+          currentId = parentEdge.source;
+        } else {
+          break;
+        }
+      }
+
+      const nextNodes = nodes.map((node) => ({
+        ...node,
+        selected: node.id === id,
+        data: {
+          ...node.data,
+          isCollapsed: ancestors.has(node.id) ? false : node.data.isCollapsed,
+        },
+      }));
+
+      set({
+        nodes: nextNodes,
+        selectedNodeIds: [id],
+        editingNodeId: null, // Reset editing when navigating via selection
+      });
     },
 
     setEditingNodeId: (id: string | null) => {
@@ -387,23 +470,27 @@ export const useTaskStore = create<TaskState>((set, get) => {
       const type =
         typeOverride ||
         (get().interactionMode === "brainstorm" ? "idea" : "task");
+      
+      // Color Inheritance
+      const parentColor = parentNode.data.color;
+      const color = (parentColor && parentColor !== "default") ? parentColor : "default";
 
       // Use Intelligent Spatial Placement
-      const position = getIncrementalPosition(parentNode, get().nodes);
+      const position = getIncrementalPosition(parentNode, get().nodes, get().edges);
 
       const newNode: TaskNode = {
         id: newNodeId,
         type: "task",
         position,
         data: {
-          title: "New Task",
+          title: "", // Start with empty title for easy typing
           status: "todo",
           depth,
           type,
-          color: "default",
+          color,
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          isPinned: false, // New nodes are auto-positioned initially
+          isPinned: false,
           onAddChild: (id) => get().addChild(id),
           onDelete: (id) => get().deleteNode(id),
           onTitleChange: (id, title) => get().updateNodeTitle(id, title),
@@ -419,17 +506,38 @@ export const useTaskStore = create<TaskState>((set, get) => {
         target: newNodeId,
         data: { type: "hierarchy" },
       };
+
       const nextNodes = get()
-        .nodes.map((n) => ({ ...n, selected: false }))
+        .nodes.map((n) =>
+          n.id === parentId
+            ? { ...n, data: { ...n.data, isCollapsed: false }, selected: false }
+            : { ...n, selected: false },
+        )
         .concat({ ...newNode, selected: true });
+      
       set({
         nodes: nextNodes,
         edges: [...get().edges, newEdge],
         selectedNodeIds: [newNodeId],
+        editingNodeId: newNodeId, // Auto-trigger editing
       });
 
       const userId = (window as any).userId;
       if (userId) get().saveToFirestore(userId);
+    },
+
+    addSibling: (nodeId: string) => {
+      if (nodeId === "root") return;
+      
+      // Find parent
+      const parentEdge = get().edges.find((e) => e.target === nodeId);
+      if (!parentEdge) {
+        // If no parent edge, just add a root-level task
+        get().addTask();
+        return;
+      }
+
+      get().addChild(parentEdge.source);
     },
 
     addTask: (status: TaskStatus = "todo", typeOverride?: TaskType) => {
@@ -446,7 +554,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
           y: Math.random() * 400,
         },
         data: {
-          title: "New Task",
+          title: "",
           status,
           depth: 0,
           type,
@@ -466,9 +574,11 @@ export const useTaskStore = create<TaskState>((set, get) => {
       const nextNodes = get()
         .nodes.map((n) => ({ ...n, selected: false }))
         .concat({ ...newNode, selected: true });
+      
       set({
         nodes: nextNodes,
         selectedNodeIds: [newNodeId],
+        editingNodeId: newNodeId,
       });
 
       const userId = (window as any).userId;
@@ -477,7 +587,12 @@ export const useTaskStore = create<TaskState>((set, get) => {
 
     deleteNode: (id: string) => {
       if (id === "root") return;
-      const { nodes, edges } = get();
+      const { nodes, edges, focusNodeId } = get();
+      
+      // Find parent before deletion for focus recovery
+      const parentEdge = edges.find((e) => e.target === id);
+      const parentId = parentEdge?.source;
+
       const nodesToDelete = new Set<string>([id]);
       const queue = [id];
       while (queue.length > 0) {
@@ -489,11 +604,25 @@ export const useTaskStore = create<TaskState>((set, get) => {
           }
         }
       }
+      
       const nextNodes = nodes.filter((n) => !nodesToDelete.has(n.id));
       const nextEdges = edges.filter(
         (e) => !nodesToDelete.has(e.source) && !nodesToDelete.has(e.target),
       );
-      set({ nodes: nextNodes, edges: nextEdges });
+
+      // Focus Recovery Logic
+      let nextFocusId = focusNodeId;
+      if (nodesToDelete.has(focusNodeId || "")) {
+        nextFocusId = parentId || null;
+      }
+
+      set({ 
+        nodes: nextNodes, 
+        edges: nextEdges,
+        focusNodeId: nextFocusId,
+        selectedNodeIds: parentId ? [parentId] : [],
+      });
+      
       const userId = (window as any).userId;
       if (userId) get().saveToFirestore(userId);
     },
@@ -574,6 +703,23 @@ export const useTaskStore = create<TaskState>((set, get) => {
       const nextNodes = get().nodes.map((node) =>
         node.id === id
           ? { ...node, data: { ...node.data, isPinned: !node.data.isPinned } }
+          : node,
+      );
+      set({ nodes: nextNodes });
+      const userId = (window as any).userId;
+      if (userId) get().saveToFirestore(userId);
+    },
+
+    toggleNodeCollapse: (id: string) => {
+      const nextNodes = get().nodes.map((node) =>
+        node.id === id
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                isCollapsed: !node.data.isCollapsed,
+              },
+            }
           : node,
       );
       set({ nodes: nextNodes });

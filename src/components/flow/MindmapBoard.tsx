@@ -23,6 +23,8 @@ import { FocusBreadcrumbs } from "./FocusBreadcrumbs";
 import { MobileToolbar } from "./MobileToolbar";
 import { ProductivityToolbar } from "./ProductivityToolbar";
 import { ShortcutLegend } from "./ShortcutLegend";
+import { SearchPalette } from "./SearchPalette";
+import { RootIndicator } from "./RootIndicator";
 
 const BoardContent = () => {
   const nodeTypes = useMemo(
@@ -50,48 +52,88 @@ const BoardContent = () => {
   const { fitView } = useReactFlow();
   const isMobile = useMobile();
 
-  // Focus Mode Logic: Filter visible nodes and edges
+  // 1. Collapse Logic: Cull nodes whose ancestors are collapsed
+  const visibleNodesAfterCollapse = useMemo(() => {
+    const collapsedNodes = nodes.filter((n) => n.data.isCollapsed);
+    if (collapsedNodes.length === 0) return nodes;
+
+    const hiddenIds = new Set<string>();
+    collapsedNodes.forEach((root) => {
+      const descendants = getSubtreeIds(root.id, edges);
+      descendants.delete(root.id); // Keep the collapsed node itself visible
+      descendants.forEach((id) => hiddenIds.add(id));
+    });
+
+    return nodes.filter((n) => !hiddenIds.has(n.id));
+  }, [nodes, edges]);
+
+  const visibleEdgesAfterCollapse = useMemo(() => {
+    const nodeIds = new Set(visibleNodesAfterCollapse.map((n) => n.id));
+    return edges.filter(
+      (e) => nodeIds.has(e.source) && nodeIds.has(e.target),
+    );
+  }, [visibleNodesAfterCollapse, edges]);
+
+  // 2. Focus Mode Logic: Filter visible nodes and edges from the ALREADY cullled list
   const visibleNodeIds = useMemo(() => {
     if (!focusNodeId) return null;
-    return getSubtreeIds(focusNodeId, edges);
-  }, [focusNodeId, edges]);
+    return getSubtreeIds(focusNodeId, visibleEdgesAfterCollapse);
+  }, [focusNodeId, visibleEdgesAfterCollapse]);
 
   const displayNodes = useMemo(() => {
-    if (!visibleNodeIds) return nodes;
-    return nodes.map((node) => ({
-      ...node,
-      style: {
-        ...node.style,
-        opacity: visibleNodeIds.has(node.id) ? 1 : 0.05,
-        pointerEvents: visibleNodeIds.has(node.id) ? "all" : "none",
-      } as React.CSSProperties,
-    }));
-  }, [nodes, visibleNodeIds]);
+    const baseNodes = visibleNodesAfterCollapse;
+    if (!focusNodeId) return baseNodes;
+    return baseNodes.map((node) => {
+      const isVisible = visibleNodeIds?.has(node.id);
+      return {
+        ...node,
+        zIndex: isVisible ? 1000 : 0,
+        style: {
+          ...node.style,
+          opacity: isVisible ? 1 : 0.1,
+          filter: isVisible ? "none" : "blur(2px)",
+          pointerEvents: isVisible ? "all" : "none",
+          transition: "opacity 0.4s ease, filter 0.4s ease",
+        } as React.CSSProperties,
+      };
+    });
+  }, [visibleNodesAfterCollapse, visibleNodeIds, focusNodeId]);
 
   const displayEdges = useMemo(() => {
-    if (!visibleNodeIds) return edges;
-    return edges.map((edge) => ({
-      ...edge,
-      style: {
-        ...edge.style,
-        opacity:
-          visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)
-            ? 1
-            : 0.05,
-      },
-    }));
-  }, [edges, visibleNodeIds]);
+    const baseEdges = visibleEdgesAfterCollapse;
+    if (!focusNodeId) return baseEdges;
+    return baseEdges.map((edge) => {
+      const isVisible =
+        visibleNodeIds?.has(edge.source) && visibleNodeIds?.has(edge.target);
+      return {
+        ...edge,
+        zIndex: isVisible ? 500 : 0,
+        style: {
+          ...edge.style,
+          opacity: isVisible ? 1 : 0.05,
+          filter: isVisible ? "none" : "blur(1px)",
+          transition: "opacity 0.4s ease, filter 0.4s ease",
+        },
+      };
+    });
+  }, [visibleEdgesAfterCollapse, visibleNodeIds, focusNodeId]);
+
+  // Zoom-to-Thinking: Double click canvas to fitView
+  const handlePaneDoubleClick = () => {
+    fitView({ duration: 800, padding: 0.2 });
+  };
 
   // Auto-fit view when focus changes
   useEffect(() => {
     if (focusNodeId && visibleNodeIds) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         fitView({
           nodes: Array.from(visibleNodeIds).map((id) => ({ id })),
-          padding: 0.3,
-          duration: 800,
+          padding: 0.4, // Increased padding for better breathing room
+          duration: 1000, // Slightly longer duration for "calm" glide
         });
       }, 50);
+      return () => clearTimeout(timer);
     }
   }, [visibleNodeIds, fitView, focusNodeId]);
 
@@ -107,6 +149,12 @@ const BoardContent = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onPaneClick={(event) => {
+          if (event.detail === 2) {
+            handlePaneDoubleClick();
+          }
+          useTaskStore.getState().setSelectedNodeIds([]);
+        }}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
@@ -134,6 +182,8 @@ const BoardContent = () => {
       </ReactFlow>
       <ProductivityToolbar />
       <ShortcutLegend />
+      <SearchPalette />
+      <RootIndicator />
       <BrainstormOverlay />
       <FocusBreadcrumbs />
       {isEmpty && <EmptyState />}

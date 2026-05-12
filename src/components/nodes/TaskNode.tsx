@@ -1,8 +1,8 @@
 "use client";
 
-import { CheckCircle2, Circle, Clock, Pin } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, Circle, Clock, Pin } from "lucide-react";
 import type React from "react";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   Handle,
   type NodeProps,
@@ -64,7 +64,20 @@ const ROOT_COLOR_OVERRIDES: Record<Exclude<TaskColor, "default">, string> = {
 export const TaskNode = memo(
   ({ id, data, selected }: NodeProps<TaskNodeData>) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [title, setTitle] = useState(data.title);
+
+    const handleMouseEnter = () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+      hoverTimerRef.current = setTimeout(() => {
+        setIsHovered(false);
+      }, 300); // Buffer to reach the toolbar
+    };
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +86,8 @@ export const TaskNode = memo(
     const updateNodeInternals = useUpdateNodeInternals();
 
     const zoom = useStore((s) => s.transform[2]);
+    const isMacro = zoom < 0.3;
+    const isMid = zoom < 0.6;
     const isVeryZoomedOut = zoom < 0.4;
 
     const isDimmed = editingNodeId !== null && editingNodeId !== id;
@@ -80,6 +95,19 @@ export const TaskNode = memo(
     const nodeColor = data.color || "default";
     const registryEntry = NODE_REGISTRY[nodeType] || NODE_REGISTRY.child;
     const Icon = registryEntry.icon;
+
+    // Calculate child count for collapse indicator
+    const allEdges = useTaskStore((s) => s.edges);
+    const childrenCount = useMemo(() => {
+      return allEdges.filter((e) => e.source === id && e.data?.type === "hierarchy").length;
+    }, [allEdges, id]);
+
+    const descendantCount = useMemo(() => {
+      if (!data.isCollapsed) return 0;
+      const { getSubtreeIds } = require("@/lib/reactflow/focusUtils");
+      const ids = getSubtreeIds(id, allEdges);
+      return ids.size - 1; // Subtract self
+    }, [id, allEdges, data.isCollapsed]);
 
     // Sync handle positions when size changes automatically
     useEffect(() => {
@@ -103,12 +131,28 @@ export const TaskNode = memo(
     useEffect(() => {
       if (isEditing && textareaRef.current) {
         textareaRef.current.focus();
-        textareaRef.current.select();
-        // Auto-adjust height
-        textareaRef.current.style.height = "auto";
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+        // Use a small timeout to ensure focus and selection happen after render
+        const timeoutId = setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.select();
+            // Auto-adjust height
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+          }
+        }, 50);
+        return () => clearTimeout(timeoutId);
       }
     }, [isEditing]);
+
+    // React to global editingNodeId
+    useEffect(() => {
+      if (editingNodeId === id && !isEditing) {
+        setIsEditing(true);
+      } else if (editingNodeId !== id && isEditing) {
+        setIsEditing(false);
+      }
+    }, [editingNodeId, id, isEditing]);
 
     const handleStartEditing = () => {
       if (nodeType === "root") return;
@@ -119,8 +163,14 @@ export const TaskNode = memo(
     const handleSave = () => {
       setIsEditing(false);
       setEditingNodeId(null);
-      if (title.trim() !== "" && title !== data.title) {
-        data.onTitleChange?.(id, title);
+      
+      const trimmedTitle = title.trim();
+      if (trimmedTitle !== "" && trimmedTitle !== data.title) {
+        data.onTitleChange?.(id, trimmedTitle);
+      } else if (trimmedTitle === "" && data.title === "") {
+        // If it was a new node and title is still empty, maybe we should delete it?
+        // For now, let's just set a placeholder or keep it empty
+        data.onTitleChange?.(id, "Untitled");
       } else {
         setTitle(data.title);
       }
@@ -146,7 +196,29 @@ export const TaskNode = memo(
       data.onStatusChange?.(id, nextStatus);
     };
 
+    const handleToggleCollapse = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      data.onToggleCollapse?.(id);
+    };
+
     const renderContent = () => {
+      if (isMacro && !isEditing) {
+        // Macro Level: Minimal color-coded block
+        return (
+          <div
+            className={cn(
+              "w-full h-full min-h-[32px] min-w-[32px] rounded-lg border-2 transition-all duration-300 shadow-sm",
+              nodeColor === "default"
+                ? registryEntry.className
+                : nodeType === "root" 
+                  ? ROOT_COLOR_OVERRIDES[nodeColor as Exclude<TaskColor, "default">]
+                  : COLOR_OVERRIDES[nodeColor as Exclude<TaskColor, "default">],
+              selected && "ring-4 ring-primary/30 border-primary"
+            )}
+          />
+        );
+      }
+
       const commonTextareaProps = {
         ref: textareaRef,
         value: title,
@@ -165,7 +237,8 @@ export const TaskNode = memo(
         return (
           <div
             className={cn(
-              "relative w-full h-auto min-h-[100px] min-w-[240px] rounded-3xl p-6 transition-all duration-300 flex items-center gap-5 border-4 shadow-2xl overflow-hidden text-white",
+              "relative w-full h-auto min-h-[100px] min-w-[240px] rounded-3xl transition-all duration-300 flex items-center gap-5 border-4 shadow-2xl overflow-hidden text-white",
+              isMid ? "p-4" : "p-6",
               nodeColor === "default"
                 ? registryEntry.className
                 : ROOT_COLOR_OVERRIDES[
@@ -175,10 +248,13 @@ export const TaskNode = memo(
                 ? "scale-105 border-white/40 ring-8 ring-primary/20"
                 : "border-transparent",
             )}
+            onDoubleClick={handleStartEditing}
           >
-            <div className="p-3 bg-white/20 rounded-2xl flex-shrink-0">
-              <Icon className="h-8 w-8 text-white" />
-            </div>
+            {!isMid && (
+              <div className="p-3 bg-white/20 rounded-2xl flex-shrink-0">
+                <Icon className="h-8 w-8 text-white" />
+              </div>
+            )}
             <div className="flex-1 text-left">
               {isEditing ? (
                 <textarea
@@ -191,7 +267,7 @@ export const TaskNode = memo(
                 />
               ) : (
                 <span className="text-xl font-black tracking-tight cursor-default select-none whitespace-pre-wrap break-words w-full">
-                  Start
+                  {data.title || "Start"}
                 </span>
               )}
             </div>
@@ -212,36 +288,39 @@ export const TaskNode = memo(
               : "border-transparent",
             nodeType === "idea" && "border-dashed",
           )}
+          onDoubleClick={handleStartEditing}
         >
-          <div
-            className={cn(
-              "p-1.5 rounded-lg flex-shrink-0",
-              nodeColor !== "default"
-                ? "bg-black/5 dark:bg-white/5"
-                : cn(
-                    nodeType === "task" &&
-                      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                    nodeType === "problem" &&
-                      "bg-pink-500/10 text-pink-600 dark:text-pink-400",
-                    nodeType === "decision" &&
-                      "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-                    nodeType === "question" &&
-                      "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-                    nodeType === "reference" &&
-                      "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
-                    nodeType === "idea" &&
-                      "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-                    nodeType === "child" && "bg-zinc-500/10 text-zinc-500",
-                    nodeType === "parent" &&
-                      "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-                  ),
-            )}
-          >
-            <Icon className="h-4 w-4" />
-          </div>
+          {!isMid && (
+            <div
+              className={cn(
+                "p-1.5 rounded-lg flex-shrink-0",
+                nodeColor !== "default"
+                  ? "bg-black/5 dark:bg-white/5"
+                  : cn(
+                      nodeType === "task" &&
+                        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                      nodeType === "problem" &&
+                        "bg-pink-500/10 text-pink-600 dark:text-pink-400",
+                      nodeType === "decision" &&
+                        "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+                      nodeType === "question" &&
+                        "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+                      nodeType === "reference" &&
+                        "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
+                      nodeType === "idea" &&
+                        "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                      nodeType === "child" && "bg-zinc-500/10 text-zinc-500",
+                      nodeType === "parent" &&
+                        "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+                    ),
+              )}
+            >
+              <Icon className="h-4 w-4" />
+            </div>
+          )}
 
           <div className="flex-1 flex items-center gap-2">
-            {!isVeryZoomedOut && nodeType === "task" && (
+            {!isMid && nodeType === "task" && (
               <button
                 type="button"
                 onClick={handleStatusToggle}
@@ -260,16 +339,34 @@ export const TaskNode = memo(
                 rows={1}
               />
             ) : (
-              <button
-                type="button"
+              <div
                 className={cn(
                   "text-sm font-semibold whitespace-pre-wrap break-words w-full cursor-text py-0.5 leading-relaxed",
-                  data.status === "done" &&
+                  data.status === "done" && !isMid &&
                     "text-muted-foreground/50 line-through",
+                  !data.title && "text-muted-foreground/30",
                 )}
-                onDoubleClick={handleStartEditing}
               >
-                {data.title}
+                {data.title || "New Node"}
+              </div>
+            )}
+
+            {childrenCount > 0 && !isMid && (
+              <button
+                type="button"
+                onClick={handleToggleCollapse}
+                className="ml-auto p-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-muted-foreground flex items-center gap-1"
+              >
+                {data.isCollapsed ? (
+                  <>
+                    <div className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                      +{descendantCount}
+                    </div>
+                    <ChevronRight className="h-4 w-4" />
+                  </>
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
               </button>
             )}
           </div>
@@ -280,6 +377,8 @@ export const TaskNode = memo(
     return (
       <div
         ref={containerRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={cn(
           "group relative transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
           isDimmed ? "opacity-30 blur-[1px]" : "opacity-100 blur-0",
@@ -299,20 +398,25 @@ export const TaskNode = memo(
           />
         )} */}
 
-        {selected && !isEditing && (
+        {selected && !isEditing && isHovered && (
           <RFNodeToolbar isVisible={true} position={Position.Top} offset={24}>
-            <NodeToolbar
-              id={id}
-              type={nodeType}
-              color={nodeColor}
-              isPinned={data.isPinned}
-              onAddChild={() => data.onAddChild?.(id)}
-              onDelete={() => data.onDelete?.(id)}
-              onTypeChange={(t) => data.onTypeChange?.(id, t)}
-              onColorChange={(c) => data.onColorChange?.(id, c)}
-              onTogglePin={() => data.onTogglePin?.(id)}
-              isRoot={id === "root"}
-            />
+            <div 
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <NodeToolbar
+                id={id}
+                type={nodeType}
+                color={nodeColor}
+                isPinned={data.isPinned}
+                onAddChild={() => data.onAddChild?.(id)}
+                onDelete={() => data.onDelete?.(id)}
+                onTypeChange={(t) => data.onTypeChange?.(id, t)}
+                onColorChange={(c) => data.onColorChange?.(id, c)}
+                onTogglePin={() => data.onTogglePin?.(id)}
+                isRoot={id === "root"}
+              />
+            </div>
           </RFNodeToolbar>
         )}
 
@@ -328,7 +432,7 @@ export const TaskNode = memo(
             position={Position.Top}
             className={cn(
               "!w-3 !h-3 !bg-primary border-2 border-background transition-all",
-              isVeryZoomedOut || (nodeType === "idea" && !selected)
+              (isVeryZoomedOut || (nodeType === "idea" && !selected) || (!isHovered && !selected))
                 ? "opacity-0"
                 : "opacity-100",
             )}
@@ -342,7 +446,7 @@ export const TaskNode = memo(
           position={Position.Bottom}
           className={cn(
             "!w-3 !h-3 !bg-primary border-2 border-background transition-all",
-            isVeryZoomedOut || (nodeType === "idea" && !selected)
+            (isVeryZoomedOut || (nodeType === "idea" && !selected) || (!isHovered && !selected))
               ? "opacity-0"
               : "opacity-100",
           )}
