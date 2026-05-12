@@ -57,13 +57,13 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js App Router |
+| Frontend | Next.js 16 App Router |
 | UI | shadcn/ui + Tailwind CSS 4 |
 | Graph Engine | React Flow |
 | Backend | Firebase |
 | Database | Firestore (Enabled Offline Persistence) |
 | Auth | Firebase Auth |
-| PWA | Web Manifest + Service Worker (Custom Cache Strategy) |
+| PWA | Serwist (High-performance Workbox-based PWA) |
 | Utilities | date-fns, lodash, uuid, dnd-kit |
 | Hosting | Vercel |
 
@@ -74,7 +74,7 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 ## Free Tier Only
 
 ### Frontend Hosting
-- Vercel Free
+- Vercel Free (Supports Turbopack build)
 
 ### Backend
 - Firebase Free Plan (Spark)
@@ -165,7 +165,7 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 ### Persistence & Offline
 - Auto save to Firestore
 - Firestore Offline Persistence (Sync when back online)
-- PWA Support (Installable, Offline Shell)
+- **Serwist PWA**: Robust TypeScript-based Service Worker with Network-First navigation and an explicit Offline Fallback page.
 
 ### Responsive
 - Enhanced touch targets for Mobile
@@ -193,13 +193,13 @@ Do NOT build initially:
 
 ```txt
 src/
-├── app/             # App Router pages & metadata
+├── app/             # App Router pages, metadata, and Service Worker (sw.ts)
 ├── components/
 │   ├── ui/          # shadcn components
 │   ├── flow/        # React Flow containers & toolbars
 │   ├── nodes/       # Custom Node implementations
 │   ├── views/       # Kanban view components
-│   └── layout/      # Layout-specific (ViewSwitcher, PWA Reg, etc.)
+│   └── layout/      # Layout-specific (ViewSwitcher, SyncStatus, etc.)
 ├── features/
 │   ├── auth/        # Auth logic & components
 │   ├── board/       # Board templates & logic

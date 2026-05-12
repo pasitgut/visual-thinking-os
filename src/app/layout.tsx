@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import { PWARegistration } from "@/components/layout/PWARegistration";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -19,13 +18,26 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Visual Mindmap",
   description: "A visual task manager using mindmaps",
+  applicationName: "Visual Mindmap",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Visual Mindmap",
+    // startupImage: [], // Add startup images if available
   },
   formatDetection: {
     telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Visual Mindmap",
+    title: "Visual Mindmap",
+    description: "A visual task manager using mindmaps",
+  },
+  twitter: {
+    card: "summary",
+    title: "Visual Mindmap",
+    description: "A visual task manager using mindmaps",
   },
 };
 
@@ -55,7 +67,6 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        <PWARegistration />
         {children}
       </body>
     </html>
