@@ -48,10 +48,11 @@ export const ShortcutLegend = () => {
       </div>
 
       <div className="space-y-2.5">
-        <ShortcutItem keys={["Enter"]} label="Add subtask" />
-        <ShortcutItem keys={["Tab"]} label="Focus child" />
-        <ShortcutItem keys={["Del"]} label="Delete task" />
-        <ShortcutItem keys={["Cmd", "S"]} label="Save board" />
+        <ShortcutItem keys={["Tab"]} label="Add child" />
+        <ShortcutItem keys={["Enter"]} label="Add sibling" />
+        <ShortcutItem keys={["↑", "↓", "←", "→"]} label="Navigate" />
+        <ShortcutItem keys={["Shift", "Tab"]} label="Go to parent" />
+        <ShortcutItem keys={["Del"]} label="Delete node" />
       </div>
 
       <p className="mt-4 text-[10px] text-muted-foreground text-center italic">

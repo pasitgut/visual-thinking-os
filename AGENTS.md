@@ -109,7 +109,10 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 
 ### Focus Mode
 - Isolated thinking workflows (Subtree isolation)
-- Dim unrelated nodes (95% dimming)
+- **Spotlight Effect**: Gaussian blur and dimming applied to non-focused nodes (10% opacity) for deep immersion.
+- **Elevated Context**: Focused nodes dynamically increase Z-Index to stay visually dominant.
+- **Graceful Recovery**: Automatic focus transition to parent when a focused node is deleted.
+- **Smooth Glide Transitions**: Ease-in-out viewport centering with increased padding (0.4) for a calm experience.
 - Breadcrumb navigation for orientation
 - Automatic viewport centering on focused subtree
 
@@ -134,6 +137,22 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 - Fixed "Start" Node: Immutable root for project clarity
 - Simplified Start Toolbar: Focused only on adding children
 - Interaction: Double-click to edit title (Desktop & Mobile)
+- **Keyboard-First Flow**: 
+    - `Tab`: Rapidly create child nodes.
+    - `Enter`: Create sibling nodes.
+    - `Shift + Tab`: Navigate to parent.
+    - `Arrows`: Hierarchical navigation between siblings, parents, and children.
+- **Subtree Dragging**: Moving a parent node automatically moves its entire descendant tree, preserving branch-specific mental geography.
+- **Subtree Collapse**: Fold/unfold branches to manage complexity. Culled nodes are removed from render cycle for performance.
+- **Semantic Zoom**: Node detail intelligently scales based on zoom level (Macro/Mid/Micro thresholds). Macro view renders minimal color-coded blocks for peak performance and clarity.
+- **Descendant Badge**: Visual indicators (e.g., `+5`) on collapsed nodes to show hidden content scale.
+- **Smart Framing**: Automatically centers viewport on the centroid of parent and child during creation to preserve visual context.
+- **Color Inheritance**: Children automatically inherit parent colors for semantic consistency.
+- **Inline Editing UX**: Auto-resizing textareas, instant focus on creation, and cursor stability.
+- **Search Palette (Cmd+K)**: Instant node search and jump-to-focus navigation.
+- **Root Indicator**: Subtle "Return to Start" guidance when the root node is off-screen.
+- **Zoom-to-Thinking**: Double-click canvas to instantly fit and reorient the view.
+- **Progressive Disclosure**: Node toolbars and connection handles only appear when selected or hovered, reducing visual noise.
 - **Manual Pinning**: User-controlled node positioning (Toggle via toolbar) to preserve spatial memory
 - Mobile Optimized: Large touch targets and simplified toolbars
 - Node Resizing: Manual + Auto-resize based on text
@@ -194,3 +213,22 @@ src/
 ├── types/           # TypeScript interfaces
 └── styles/          # Global styles
 ```
+
+---
+
+# Sub-Agents
+
+## flow_engineer
+Expert in ReactFlow and Zustand state management.
+- Handles complex node/edge interactions.
+- Manages spatial engines and layout logic.
+- Implements custom flow behaviors and performance optimizations.
+- Focuses on the "Spatial Thinking" logic.
+
+## ui_specialist
+Expert in Next.js, Shadcn UI, and Tailwind CSS.
+- Builds polished components and layouts.
+- Ensures design consistency and accessibility.
+- Handles responsive design and mobile optimizations.
+- Focuses on "Interaction Polish" and aesthetics.
+

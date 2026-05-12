@@ -1,4 +1,4 @@
-import type { Node, XYPosition } from "reactflow";
+import type { Edge, Node, XYPosition } from "reactflow";
 import type { TaskNode } from "@/types/task";
 
 /**
@@ -7,15 +7,17 @@ import type { TaskNode } from "@/types/task";
  */
 export const getIncrementalPosition = (
   parentNode: Node,
-  existingNodes: Node[],
-  offset = { x: 250, y: 0 }, // Default horizontal mindmap flow
+  nodes: Node[],
+  edges: Edge[],
+  offset = { x: 260, y: 0 }, // Slightly larger horizontal gap
 ): XYPosition => {
-  const siblings = existingNodes.filter(
+  const siblings = nodes.filter(
     (n) =>
-      n.parentNode === parentNode.id ||
-      (n.data && n.data.parentId === parentNode.id),
+      n.id !== parentNode.id && // Not the parent itself
+      edges.some(e => e.source === parentNode.id && e.target === n.id) // Is a child of this parent
   );
 
+  // If no siblings, place at the default offset
   if (siblings.length === 0) {
     return {
       x: parentNode.position.x + offset.x,
@@ -23,16 +25,17 @@ export const getIncrementalPosition = (
     };
   }
 
-  // Calculate the average spread of siblings
+  // Find the max vertical extent of existing siblings to place the next one below/above
   const siblingCount = siblings.length;
-  const spread = 120; // Vertical gap between siblings
-  const startY =
-    parentNode.position.y - (siblingCount * spread) / 2 + spread / 2;
-
-  // Find the next available "slot"
+  const verticalGap = 100; // Consistent vertical gap
+  
+  // Center siblings vertically around the parent
+  const totalHeight = (siblingCount) * verticalGap;
+  const startY = parentNode.position.y - (totalHeight / 2);
+  
   return {
     x: parentNode.position.x + offset.x,
-    y: startY + siblingCount * spread,
+    y: startY + siblingCount * verticalGap,
   };
 };
 

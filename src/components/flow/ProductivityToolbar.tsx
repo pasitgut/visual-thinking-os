@@ -118,10 +118,11 @@ export const ProductivityToolbar = () => {
                 buttonVariants({ variant: "ghost", size: "icon" }),
                 "h-9 w-9 cursor-pointer",
               )}
+              onClick={() => useTaskStore.getState().setSearchOpen(true)}
             >
               <Search className="h-4 w-4" />
             </TooltipTrigger>
-            <TooltipContent side="bottom">Search (Coming Soon)</TooltipContent>
+            <TooltipContent side="bottom">Search (Cmd+K)</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="h-4 mx-1" />
