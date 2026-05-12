@@ -38,6 +38,8 @@ interface TaskState {
   selectedNodeIds: string[];
   editingNodeId: string | null;
   isSearchOpen: boolean;
+  recentNodeIds: string[];
+  bookmarks: Record<string, { x: number; y: number; zoom: number }>;
   isLoading: boolean;
   saveStatus: "saved" | "saving" | "error";
   onNodesChange: OnNodesChange;
@@ -61,6 +63,8 @@ interface TaskState {
   updateEdgeType: (id: string, type: RelationshipType) => void;
   toggleNodePin: (id: string) => void;
   toggleNodeCollapse: (id: string) => void;
+  addToRecent: (id: string) => void;
+  setBookmark: (key: string, view: { x: number; y: number; zoom: number }) => void;
   initialize: (userId: string) => Promise<void>;
   createRootTask: () => void;
   createExampleBoard: () => void;
@@ -134,6 +138,8 @@ export const useTaskStore = create<TaskState>((set, get) => {
     selectedNodeIds: [],
     editingNodeId: null,
     isSearchOpen: false,
+    recentNodeIds: [],
+    bookmarks: {},
     isLoading: true,
     saveStatus: "saved",
 
@@ -261,6 +267,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
         selectedNodeIds: [id],
         editingNodeId: null, // Reset editing when navigating via selection
       });
+      get().addToRecent(id);
     },
 
     setEditingNodeId: (id: string | null) => {
@@ -725,6 +732,24 @@ export const useTaskStore = create<TaskState>((set, get) => {
       set({ nodes: nextNodes });
       const userId = (window as any).userId;
       if (userId) get().saveToFirestore(userId);
+    },
+
+    addToRecent: (id: string) => {
+      const current = get().recentNodeIds;
+      if (current[0] === id) return; // Already most recent
+
+      const filtered = current.filter((nodeId) => nodeId !== id);
+      const next = [id, ...filtered].slice(0, 5); // Keep last 5
+      set({ recentNodeIds: next });
+    },
+
+    setBookmark: (key: string, view: { x: number; y: number; zoom: number }) => {
+      set((state) => ({
+        bookmarks: {
+          ...state.bookmarks,
+          [key]: view,
+        },
+      }));
     },
 
     applyLayout: () => {

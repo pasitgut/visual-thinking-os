@@ -51,12 +51,14 @@ export const ShortcutLegend = () => {
         <ShortcutItem keys={["Tab"]} label="Add child" />
         <ShortcutItem keys={["Enter"]} label="Add sibling" />
         <ShortcutItem keys={["↑", "↓", "←", "→"]} label="Navigate" />
+        <ShortcutItem keys={["Cmd", "K"]} label="Search nodes" />
+        <ShortcutItem keys={["Alt", "1-9"]} label="Jump to bookmark" />
         <ShortcutItem keys={["Shift", "Tab"]} label="Go to parent" />
         <ShortcutItem keys={["Del"]} label="Delete node" />
       </div>
 
       <p className="mt-4 text-[10px] text-muted-foreground text-center italic">
-        These only work when a node is selected.
+        Alt+Ctrl+1-9 to set a bookmark.
       </p>
     </div>
   );
