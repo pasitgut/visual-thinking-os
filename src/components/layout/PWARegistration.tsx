@@ -4,11 +4,9 @@ import { useEffect } from "react";
 
 export function PWARegistration() {
   useEffect(() => {
-    if (
-      "serviceWorker" in navigator &&
-      window.location.hostname !== "localhost"
-    ) {
+    if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
+        // Register the service worker
         navigator.serviceWorker
           .register("/sw.js")
           .then((registration) => {

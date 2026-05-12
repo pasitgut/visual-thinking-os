@@ -2,7 +2,7 @@ const CACHE_NAME = "visual-mindmap-v1";
 const ASSETS_TO_CACHE = [
   "/",
   "/favicon.ico",
-  "/manifest.json",
+  "/manifest",
   "/file.svg",
   "/globe.svg",
   "/next.svg",
@@ -13,6 +13,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log("Opened cache");
       return cache.addAll(ASSETS_TO_CACHE);
     }),
   );
@@ -25,6 +26,7 @@ self.addEventListener("activate", (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log("Deleting old cache:", cacheName);
             return caches.delete(cacheName);
           }
           return null;
@@ -36,39 +38,61 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Only cache GET requests
+  // Only handle GET requests
   if (event.request.method !== "GET") return;
 
+  // Skip chrome-extension, firebase, etc
+  const url = new URL(event.request.url);
+  if (
+    url.origin !== self.location.origin ||
+    url.pathname.startsWith("/_next/webpack-hmr") ||
+    url.pathname.startsWith("/api/")
+  ) {
+    return;
+  }
+
   event.respondWith(
-    caches
-      .match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then((fetchResponse) => {
-          // Don't cache if not a success or if it's not from our origin
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        // Return cached response, but update cache in the background (Stale-While-Revalidate)
+        fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, networkResponse);
+              });
+            }
+          })
+          .catch(() => {
+            /* ignore background fetch errors */
+          });
+        return cachedResponse;
+      }
+
+      return fetch(event.request)
+        .then((networkResponse) => {
           if (
-            !fetchResponse ||
-            fetchResponse.status !== 200 ||
-            fetchResponse.type !== "basic"
+            !networkResponse ||
+            networkResponse.status !== 200 ||
+            networkResponse.type !== "basic"
           ) {
-            return fetchResponse;
+            return networkResponse;
           }
 
-          const responseToCache = fetchResponse.clone();
+          const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
 
-          return fetchResponse;
+          return networkResponse;
+        })
+        .catch(() => {
+          // If network fails and no cache, check if it's a navigation request
+          if (event.request.mode === "navigate") {
+            return caches.match("/");
+          }
+          return null;
         });
-      })
-      .catch(() => {
-        // Offline fallback for navigation requests
-        if (event.request.mode === "navigate") {
-          return caches.match("/");
-        }
-      }),
+    }),
   );
 });
