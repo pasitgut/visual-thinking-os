@@ -91,6 +91,8 @@ export const TaskNode = memo(
     const isVeryZoomedOut = zoom < 0.4;
 
     const isDimmed = editingNodeId !== null && editingNodeId !== id;
+    const isDone = data.status === "done";
+    const depth = data.depth ?? 0;
     const nodeType = data.type || "child";
     const nodeColor = data.color || "default";
     const registryEntry = NODE_REGISTRY[nodeType] || NODE_REGISTRY.child;
@@ -266,7 +268,11 @@ export const TaskNode = memo(
                   rows={1}
                 />
               ) : (
-                <span className="text-xl font-black tracking-tight cursor-default select-none whitespace-pre-wrap break-words w-full">
+                <span className={cn(
+                  "tracking-tight cursor-default select-none whitespace-pre-wrap break-words w-full transition-all duration-300",
+                  depth === 0 ? "text-xl font-black" : depth === 1 ? "text-lg font-extrabold" : "text-base font-bold",
+                  isDone && "text-white/60"
+                )}>
                   {data.title || "Start"}
                 </span>
               )}
@@ -341,9 +347,9 @@ export const TaskNode = memo(
             ) : (
               <div
                 className={cn(
-                  "text-sm font-semibold whitespace-pre-wrap break-words w-full cursor-text py-0.5 leading-relaxed",
-                  data.status === "done" && !isMid &&
-                    "text-muted-foreground/50 line-through",
+                  "whitespace-pre-wrap break-words w-full cursor-text py-0.5 leading-relaxed transition-all duration-300",
+                  depth === 1 ? "text-base font-bold" : "text-sm font-semibold",
+                  isDone && !isMid && "text-muted-foreground/40 line-through grayscale",
                   !data.title && "text-muted-foreground/30",
                 )}
               >
@@ -382,6 +388,7 @@ export const TaskNode = memo(
         className={cn(
           "group relative transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
           isDimmed ? "opacity-30 blur-[1px]" : "opacity-100 blur-0",
+          isDone && !selected && "opacity-60 grayscale-[0.4]",
         )}
       >
         {/* {selected && (

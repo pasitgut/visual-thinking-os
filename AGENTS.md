@@ -93,7 +93,7 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 
 ### Multi-View System
 - Mindmap View (Primary)
-- Kanban View (Modern dnd-kit powered task board with Drag Overlay)
+- Kanban View (Modern dnd-kit powered task board with Drag Overlay). **Optimized**: Only renders "Task" type nodes to maintain focus on execution.
 
 ### Rich Node Content System
 - Markdown notes with live preview
@@ -109,10 +109,11 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 
 ### Focus Mode
 - Isolated thinking workflows (Subtree isolation)
+- **Semantic-Agnostic Traversal**: Show all connected nodes regardless of relationship type (Subtask, Related, Blocks, etc.).
 - **Spotlight Effect**: Gaussian blur and dimming applied to non-focused nodes (10% opacity) for deep immersion.
 - **Elevated Context**: Focused nodes dynamically increase Z-Index to stay visually dominant.
 - **Graceful Recovery**: Automatic focus transition to parent when a focused node is deleted.
-- **Smooth Glide Transitions**: Ease-in-out viewport centering with increased padding (0.4) for a calm experience.
+- **Respectful Zoom**: Initial fit-to-view on activation, then respects manual user zoom without aggressive overrides.
 - Breadcrumb navigation for orientation
 - Automatic viewport centering on focused subtree
 
@@ -142,11 +143,18 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
     - `Enter`: Create sibling nodes.
     - `Shift + Tab`: Navigate to parent.
     - `Arrows`: Hierarchical navigation between siblings, parents, and children.
-- **Subtree Dragging**: Moving a parent node automatically moves its entire descendant tree, preserving branch-specific mental geography.
+- **Subtree Dragging**: Moving a parent node automatically moves its entire descendant tree, preserving branch-specific mental geography. Independent of edge relationship types.
 - **Subtree Collapse**: Fold/unfold branches to manage complexity. Culled nodes are removed from render cycle for performance.
 - **Semantic Zoom**: Node detail intelligently scales based on zoom level (Macro/Mid/Micro thresholds). Macro view renders minimal color-coded blocks for peak performance and clarity.
+- **Visual Hierarchy**: 
+    - **Typographical Scaling**: Font sizes and weights automatically adjust based on node depth (Root > Parent > Child).
+    - **Done Fading**: Nodes and text marked as "Done" automatically fade and de-saturate to reduce visual noise.
+    - **Edge Cleanup**: Relationship lines are thinner and more transparent by default. **Color Sync**: Arrow markers perfectly match edge stroke colors.
+- **Compact Toolbars**: Refined, lightweight Productivity and Node toolbars for maximum canvas space and minimal distraction.
 - **Descendant Badge**: Visual indicators (e.g., `+5`) on collapsed nodes to show hidden content scale.
 - **Smart Framing**: Automatically centers viewport on the centroid of parent and child during creation to preserve visual context.
+- **Creation Focus**: Automatically centers viewport on newly created nodes to maintain workflow continuity.
+- **Graph Integrity**: Prevention of self-connecting loops to ensure data structure validity.
 - **Color Inheritance**: Children automatically inherit parent colors for semantic consistency.
 - **Inline Editing UX**: Auto-resizing textareas, instant focus on creation, and cursor stability.
 - **Search Palette (Cmd+K)**: Instant node search and jump-to-focus navigation. Includes **Recent History** section for rapid context switching.

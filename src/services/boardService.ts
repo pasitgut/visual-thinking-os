@@ -17,35 +17,33 @@ export interface BoardData {
   updatedAt: number;
 }
 
+/**
+ * Recursively removes any functions or undefined values from an object to make it Firestore-serializable.
+ */
+const cleanData = (obj: any): any => {
+  if (obj === null || typeof obj !== "object") {
+    return obj === undefined ? null : obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(cleanData);
+  }
+
+  const result: any = {};
+  for (const key in obj) {
+    const value = obj[key];
+    if (typeof value !== "function" && value !== undefined) {
+      result[key] = cleanData(value);
+    }
+  }
+  return result;
+};
+
 export const BoardService = {
   saveBoard: async (userId: string, nodes: TaskNode[], edges: Edge[]) => {
-    // We strip all function callbacks from node data before saving to Firestore
-    const serializableNodes = nodes.map((node) => {
-      const cleanData = { ...node.data };
-
-      // Remove any function values from the data object
-      Object.keys(cleanData).forEach((key) => {
-        if (typeof (cleanData as any)[key] === "function") {
-          delete (cleanData as any)[key];
-        }
-      });
-
-      return {
-        ...node,
-        data: cleanData,
-      };
-    });
-
-    const serializableEdges = edges.map((edge) => {
-      if (!edge.data) return edge;
-      const cleanData = { ...edge.data };
-      Object.keys(cleanData).forEach((key) => {
-        if (typeof cleanData[key] === "function") {
-          delete cleanData[key];
-        }
-      });
-      return { ...edge, data: cleanData };
-    });
+    // We strip all function callbacks and undefined values from node/edge data before saving to Firestore
+    const serializableNodes = nodes.map((node) => cleanData(node));
+    const serializableEdges = edges.map((edge) => cleanData(edge));
 
     const boardRef = doc(db, "boards", userId);
     await setDoc(boardRef, {
