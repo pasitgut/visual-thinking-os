@@ -14,6 +14,10 @@ import {
 import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/useTaskStore";
+import { useDeviceSpec } from "@/hooks/useDeviceSpec";
+import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { useLongPress } from "@/hooks/useLongPress";
+import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
 import type {
   TaskColor,
   TaskNodeData,
@@ -90,6 +94,28 @@ export const TaskNode = memo(
     const isMid = zoom < 0.6;
     const isVeryZoomedOut = zoom < 0.4;
 
+    const { isMobile } = useDeviceSpec();
+    const { setInteractionState, setSelectedNodeId: setMobileSelectedNodeId } = useMobileUIStore();
+
+    const longPressHandlers = useLongPress({
+      onLongPress: () => {
+        if (isMobile) {
+          setInteractionState("dragging-node");
+          setMobileSelectedNodeId(id);
+          // Future: Add haptic feedback here
+          if (navigator.vibrate) navigator.vibrate(50);
+        }
+      },
+      onClick: () => {
+        if (isMobile) {
+          setInteractionState("node-selected");
+          setMobileSelectedNodeId(id);
+          useTaskStore.getState().setSelectedNodeIds([id]);
+          useMobileUIStore.getState().setBottomSheetOpen(true);
+        }
+      },
+    });
+
     const isDimmed = editingNodeId !== null && editingNodeId !== id;
     const isDone = data.status === "done";
     const depth = data.depth ?? 0;
@@ -106,7 +132,6 @@ export const TaskNode = memo(
 
     const descendantCount = useMemo(() => {
       if (!data.isCollapsed) return 0;
-      const { getSubtreeIds } = require("@/lib/reactflow/focusUtils");
       const ids = getSubtreeIds(id, allEdges);
       return ids.size - 1; // Subtract self
     }, [id, allEdges, data.isCollapsed]);
@@ -160,11 +185,13 @@ export const TaskNode = memo(
       if (nodeType === "root") return;
       setIsEditing(true);
       setEditingNodeId(id);
+      if (isMobile) setInteractionState("editing-text");
     };
 
     const handleSave = () => {
       setIsEditing(false);
       setEditingNodeId(null);
+      if (isMobile) setInteractionState("node-selected");
       
       const trimmedTitle = title.trim();
       if (trimmedTitle !== "" && trimmedTitle !== data.title) {
@@ -187,6 +214,7 @@ export const TaskNode = memo(
         setIsEditing(false);
         setEditingNodeId(null);
         setTitle(data.title);
+        if (isMobile) setInteractionState("node-selected");
       }
     };
 
@@ -385,10 +413,15 @@ export const TaskNode = memo(
         ref={containerRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        {...(isMobile ? longPressHandlers : {})}
+        onContextMenu={(e) => isMobile && e.preventDefault()}
         className={cn(
           "group relative transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
-          isDimmed ? "opacity-30 blur-[1px]" : "opacity-100 blur-0",
+          isDimmed 
+            ? (isMobile ? "opacity-30 grayscale-[0.5]" : "opacity-30 blur-[1px]") 
+            : "opacity-100 blur-0",
           isDone && !selected && "opacity-60 grayscale-[0.4]",
+          isMobile && "transition-opacity duration-200" // Faster opacity transition on mobile
         )}
       >
         {/* {selected && (
@@ -405,7 +438,7 @@ export const TaskNode = memo(
           />
         )} */}
 
-        {selected && !isEditing && isHovered && (
+        {selected && !isEditing && isHovered && !isMobile && (
           <RFNodeToolbar isVisible={true} position={Position.Top} offset={24}>
             <div 
               onMouseEnter={handleMouseEnter}

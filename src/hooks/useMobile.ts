@@ -1,17 +1,6 @@
-import { useEffect, useState } from "react";
+import { useDeviceSpec } from "./useDeviceSpec";
 
-export const useMobile = (breakpoint = 768) => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < breakpoint);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [breakpoint]);
-
+export const useMobile = () => {
+  const { isMobile } = useDeviceSpec();
   return isMobile;
 };

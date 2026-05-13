@@ -175,12 +175,30 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 - Firestore Offline Persistence (Sync when back online)
 - **Serwist PWA**: Robust TypeScript-based Service Worker with Network-First navigation and an explicit Offline Fallback page.
 
+### Mobile & Tablet UX Architecture
+- **Adaptive Interaction Model**: 
+    - **Pan Mode**: Default interaction (nodesDraggable: false) to prevent accidental moves.
+    - **Edit Mode**: Triggered via long-press (500ms) for precise node dragging with haptic feedback.
+- **Contextual Action Sheets**:
+    - **MobileNodeActions**: Replaces floating toolbars with a thumb-zone optimized Bottom Sheet.
+    - **Quick Actions**: Add child, delete, change type, and color pickers all reachable within one-handed range.
+- **Mobile Command Bar**:
+    - Viewport-anchored navigation for Search, Inbox, and Quick Capture.
+    - Elevated FAB for "Rapid Ideation" entry point.
+- **Viewport Constraints**:
+    - **Spatial Sanity**: Implementation of `translateExtent` (with 1000px padding) to prevent drifting into infinite empty space.
+    - **Safe Zoom**: Fixed zoom bounds for mobile (`0.4` to `1.5`) to ensure legibility and touch-target reliability.
+- **Mobile Performance Optimization**:
+    - **GPU-Safe Effects**: Removal of expensive Gaussian blur and filters on mobile. Replaced with lightweight `grayscale` and `opacity` toggles for Focus Mode and dimmed states.
+    - **Node Culling**: Strict `onlyRenderVisibleElements` enabled for mobile to optimize DOM overhead.
+    - **Animation Throttling**: Disabled animated edges and faster transitions to maintain 60fps on mobile devices.
+
 ### Responsive
-- Enhanced touch targets for Mobile
-- Floating toolbars for small screens
+- Enhanced touch targets for Mobile (min 56px for primary actions).
+- **Mobile Command Bar**: Bottom-anchored navigation and capture bar.
+- **Contextual Bottom Sheets**: Dynamic action panels for node management.
 - View switcher integrated in Header
 - Mobile Kanban: Horizontal column swipe (85% width) and full-page vertical scroll
-- Responsive: Enhanced touch targets for mobile and view switcher in header
 
 ---
 
