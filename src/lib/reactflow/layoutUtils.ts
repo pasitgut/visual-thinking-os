@@ -2,14 +2,17 @@ import dagre from "dagre";
 import type { Edge } from "reactflow";
 import type { TaskNode } from "@/types/task";
 
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
-
 const nodeWidth = 200;
 const nodeHeight = 80;
 
-export const getLayoutedElements = (nodes: TaskNode[], edges: Edge[]) => {
-  dagreGraph.setGraph({ rankdir: "TB", nodesep: 100, ranksep: 150 });
+export const getLayoutedElements = (
+  nodes: TaskNode[],
+  edges: Edge[],
+  direction: "TB" | "LR" = "LR",
+) => {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({ rankdir: direction, nodesep: 100, ranksep: 150 });
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
