@@ -15,9 +15,10 @@ import "reactflow/dist/style.css";
 import { RelationshipEdge } from "@/components/flow/RelationshipEdge";
 import { TaskNode } from "@/components/nodes/TaskNode";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useMobile } from "@/hooks/useMobile";
+import { useDeviceSpec } from "@/hooks/useDeviceSpec";
 import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
 import { useTaskStore } from "@/stores/useTaskStore";
+import { useMobileUIStore } from "@/stores/useMobileUIStore";
 import { BrainstormOverlay } from "./BrainstormOverlay";
 import { EmptyState } from "./EmptyState";
 import { FocusBreadcrumbs } from "./FocusBreadcrumbs";
@@ -26,6 +27,9 @@ import { ProductivityToolbar } from "./ProductivityToolbar";
 import { ShortcutLegend } from "./ShortcutLegend";
 import { SearchPalette } from "./SearchPalette";
 import { RootIndicator } from "./RootIndicator";
+import { BottomSheetContainer } from "@/components/mobile/BottomSheetContainer";
+import { MobileNodeActions } from "@/components/mobile/MobileNodeActions";
+import { MobileCommandBar } from "@/components/mobile/MobileCommandBar";
 
 const BoardContent = () => {
   const nodeTypes = useMemo(
@@ -51,7 +55,40 @@ const BoardContent = () => {
     focusNodeId,
   } = useTaskStore();
   const { fitView } = useReactFlow();
-  const isMobile = useMobile();
+  const { isMobile, isTablet } = useDeviceSpec();
+  const {
+    interactionState,
+    setInteractionState,
+    selectedNodeId,
+    setSelectedNodeId,
+    isBottomSheetOpen,
+    setBottomSheetOpen,
+  } = useMobileUIStore();
+
+  // 1.1 Viewport Clamping: Calculate bounds for translateExtent
+  const translateExtent = useMemo(() => {
+    if (nodes.length === 0) return undefined;
+    
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    for (const node of nodes) {
+      const { x, y } = node.position;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+
+    // Add padding (50% of viewport approx)
+    const padding = 1000;
+    return [
+      [minX - padding, minY - padding],
+      [maxX + padding, maxY + padding],
+    ] as [[number, number], [number, number]];
+  }, [nodes]);
 
   // 1. Collapse Logic: Cull nodes whose ancestors are collapsed
   const visibleNodesAfterCollapse = useMemo(() => {
@@ -86,19 +123,27 @@ const BoardContent = () => {
     if (!focusNodeId) return baseNodes;
     return baseNodes.map((node) => {
       const isVisible = visibleNodeIds?.has(node.id);
+      
+      // 1.2 Replace Blur with Grayscale on Mobile
+      const filterEffect = isMobile 
+        ? (isVisible ? "none" : "grayscale(1)") 
+        : (isVisible ? "none" : "blur(2px)");
+
       return {
         ...node,
         zIndex: isVisible ? 1000 : 0,
         style: {
           ...node.style,
           opacity: isVisible ? 1 : 0.1,
-          filter: isVisible ? "none" : "blur(2px)",
+          filter: filterEffect,
           pointerEvents: isVisible ? "all" : "none",
-          transition: "opacity 0.4s ease, filter 0.4s ease",
+          transition: isMobile 
+            ? "opacity 0.2s ease" // Faster transition on mobile
+            : "opacity 0.4s ease, filter 0.4s ease",
         } as React.CSSProperties,
       };
     });
-  }, [visibleNodesAfterCollapse, visibleNodeIds, focusNodeId]);
+  }, [visibleNodesAfterCollapse, visibleNodeIds, focusNodeId, isMobile]);
 
   const displayEdges = useMemo(() => {
     const baseEdges = visibleEdgesAfterCollapse;
@@ -125,7 +170,7 @@ const BoardContent = () => {
         fitView({
           nodes: Array.from(visibleNodeIds).map((id) => ({ id })),
           padding: 0.3, // 1.3 Suggested Constraints
-          duration: 1000,
+          duration: isMobile ? 600 : 1000, // Faster on mobile
           minZoom: 0.4,
           maxZoom: 1.2,
         });
@@ -134,7 +179,7 @@ const BoardContent = () => {
     } else if (!focusNodeId) {
       lastFittedFocusId.current = null;
     }
-  }, [visibleNodeIds, fitView, focusNodeId]);
+  }, [visibleNodeIds, fitView, focusNodeId, isMobile]);
 
   useKeyboardShortcuts();
 
@@ -148,11 +193,26 @@ const BoardContent = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onMoveStart={() => isMobile && setInteractionState("panning")}
+        onMoveEnd={() => {
+          if (isMobile) {
+            setInteractionState(useMobileUIStore.getState().selectedNodeId ? "node-selected" : "idle");
+          }
+        }}
+        onNodeDragStop={() => {
+          if (isMobile) {
+            setInteractionState("node-selected");
+          }
+        }}
         onPaneClick={(event) => {
           if (event.detail === 2) {
             handlePaneDoubleClick();
           }
           useTaskStore.getState().setSelectedNodeIds([]);
+          if (isMobile) {
+            setInteractionState("idle");
+            setSelectedNodeId(null);
+          }
         }}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -161,11 +221,15 @@ const BoardContent = () => {
           padding: isMobile ? 0.3 : 0.1,
           maxZoom: 1.5,
         }}
-        minZoom={0.2}
-        maxZoom={4}
+        minZoom={isMobile ? 0.4 : 0.2}
+        maxZoom={isMobile ? 1.5 : 4}
+        translateExtent={translateExtent}
+        onlyRenderVisibleElements={isMobile}
+        nodesDraggable={isMobile ? interactionState === "dragging-node" : true}
+        panOnDrag={true}
         defaultEdgeOptions={{
           type: "relationship",
-          animated: true,
+          animated: !isMobile, // Disable edge animation on mobile for performance
           markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 20,
@@ -192,6 +256,18 @@ const BoardContent = () => {
       <FocusBreadcrumbs />
       {isEmpty && <EmptyState />}
       <MobileToolbar />
+
+      {isMobile && <MobileCommandBar />}
+
+      {isMobile && (
+        <BottomSheetContainer
+          open={isBottomSheetOpen}
+          onOpenChange={setBottomSheetOpen}
+          title={nodes.find((n) => n.id === selectedNodeId)?.data.title || "Node Actions"}
+        >
+          <MobileNodeActions />
+        </BottomSheetContainer>
+      )}
     </>
   );
 };
