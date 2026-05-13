@@ -1,11 +1,10 @@
 import { Keyboard, MousePointer2, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BOARD_TEMPLATES } from "@/features/board/templates";
 import { useTaskStore } from "@/stores/useTaskStore";
 
 export const EmptyState = () => {
   const createRootTask = useTaskStore((state) => state.createRootTask);
-  const applyTemplate = useTaskStore((state) => state.applyTemplate);
+
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px] z-10 overflow-auto py-12">
@@ -38,24 +37,6 @@ export const EmptyState = () => {
               Or start with a template
             </span>
             <div className="h-px w-12 bg-border" />
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {BOARD_TEMPLATES.map((template) => (
-              <button
-                type="button"
-                key={template.id}
-                onClick={() => applyTemplate(template.id)}
-                className="group flex flex-col items-center p-4 bg-card border rounded-2xl transition-all duration-300 hover:border-primary hover:bg-primary/5 hover:shadow-md"
-              >
-                <span className="text-2xl mb-2 group-hover:scale-125 transition-transform duration-300">
-                  {template.icon}
-                </span>
-                <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary transition-colors text-center uppercase tracking-wider">
-                  {template.name.split(" ")[0]}
-                </span>
-              </button>
-            ))}
           </div>
         </div>
 

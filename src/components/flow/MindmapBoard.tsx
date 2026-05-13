@@ -27,11 +27,17 @@ import { ProductivityToolbar } from "./ProductivityToolbar";
 import { ShortcutLegend } from "./ShortcutLegend";
 import { SearchPalette } from "./SearchPalette";
 import { RootIndicator } from "./RootIndicator";
+import { QuickCaptureOverlay } from "./QuickCaptureOverlay";
 import { BottomSheetContainer } from "@/components/mobile/BottomSheetContainer";
 import { MobileNodeActions } from "@/components/mobile/MobileNodeActions";
-import { MobileCommandBar } from "@/components/mobile/MobileCommandBar";
+
+import { useDroppable } from "@dnd-kit/core";
 
 const BoardContent = () => {
+  const { setNodeRef } = useDroppable({
+    id: "react-flow-pane",
+  });
+  
   const nodeTypes = useMemo(
     () => ({
       task: TaskNode,
@@ -181,12 +187,37 @@ const BoardContent = () => {
     }
   }, [visibleNodeIds, fitView, focusNodeId, isMobile]);
 
+  // 4.1 Tablet Sidebar Resize Handling
+  // Trigger debounced fitView when isTablet changes to ensure graph centering
+  const fitViewTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (nodes.length === 0) return;
+
+    // Clear existing timer
+    if (fitViewTimerRef.current) {
+      clearTimeout(fitViewTimerRef.current);
+    }
+
+    // Debounce fitView to avoid flickering during layout transitions
+    fitViewTimerRef.current = setTimeout(() => {
+      fitView({
+        duration: 600,
+        padding: isMobile || isTablet ? 0.3 : 0.1,
+      });
+    }, 350); // Delay slightly longer than CSS transitions
+
+    return () => {
+      if (fitViewTimerRef.current) clearTimeout(fitViewTimerRef.current);
+    };
+  }, [isTablet, fitView, nodes.length, isMobile]);
+
   useKeyboardShortcuts();
 
   const isEmpty = nodes.length === 0;
 
   return (
-    <>
+    <div ref={setNodeRef} className="w-full h-full relative">
       <ReactFlow
         nodes={displayNodes}
         edges={displayEdges}
@@ -253,11 +284,10 @@ const BoardContent = () => {
       <SearchPalette />
       <RootIndicator />
       <BrainstormOverlay />
+      <QuickCaptureOverlay />
       <FocusBreadcrumbs />
       {isEmpty && <EmptyState />}
       <MobileToolbar />
-
-      {isMobile && <MobileCommandBar />}
 
       {isMobile && (
         <BottomSheetContainer
@@ -268,16 +298,14 @@ const BoardContent = () => {
           <MobileNodeActions />
         </BottomSheetContainer>
       )}
-    </>
+    </div>
   );
 };
 
 export const MindmapBoard = () => {
   return (
     <div className="w-full h-full bg-background">
-      <ReactFlowProvider>
-        <BoardContent />
-      </ReactFlowProvider>
+      <BoardContent />
     </div>
   );
 };

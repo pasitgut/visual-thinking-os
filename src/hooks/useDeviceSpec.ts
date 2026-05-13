@@ -23,8 +23,8 @@ export const useDeviceSpec = (): DeviceSpec => {
         navigator.maxTouchPoints > 0;
       
       const isMobile = width < 768;
-      const isTablet = width >= 768 && width < 1024;
-      const isDesktop = width >= 1024;
+      const isTablet = (width >= 768 && width < 1280) || (width >= 1280 && isTouch && width < 1440);
+      const isDesktop = width >= 1280 && !isTablet;
 
       setSpec({
         isMobile,

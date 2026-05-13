@@ -1,40 +1,54 @@
 "use client";
 
-import { ArrowRight, Inbox, X } from "lucide-react";
+import { ArrowRight, Inbox, X, Zap } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useInboxStore } from "@/stores/useInboxStore";
+import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { useDeviceSpec } from "@/hooks/useDeviceSpec";
+import { cn } from "@/lib/utils";
 
+/**
+ * QuickCaptureOverlay
+ * A distraction-free, fullscreen (on mobile) overlay for rapid thought capture.
+ * Routes captured content directly to the Inbox store.
+ */
 export const QuickCaptureOverlay = () => {
   const { addItem } = useInboxStore();
+  const { isQuickCaptureOpen, setQuickCaptureOpen } = useMobileUIStore();
+  const { isMobile } = useDeviceSpec();
 
-  const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Desktop Shortcut Support (Alt + I)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Use Alt+I for Inbox Capture
       if (e.altKey && e.key.toLowerCase() === "i") {
         e.preventDefault();
-        setIsOpen(true);
+        setQuickCaptureOpen(true);
       }
 
-      if (e.key === "Escape" && isOpen) {
-        setIsOpen(false);
+      if (e.key === "Escape" && isQuickCaptureOpen) {
+        setQuickCaptureOpen(false);
         setInputValue("");
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, [isQuickCaptureOpen, setQuickCaptureOpen]);
 
+  // Auto-focus input when opened
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isQuickCaptureOpen) {
+      // Small timeout to ensure the keyboard pops up on mobile
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isQuickCaptureOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,65 +56,117 @@ export const QuickCaptureOverlay = () => {
 
     await addItem(inputValue.trim());
     setInputValue("");
-    setIsOpen(false);
+    setQuickCaptureOpen(false);
   };
 
-  if (!isOpen) return null;
+  const handleClose = () => {
+    setQuickCaptureOpen(false);
+    setInputValue("");
+  };
+
+  if (!isQuickCaptureOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-background/40 backdrop-blur-md p-6 animate-in fade-in duration-300">
-      <div className="w-full max-w-xl bg-card border border-primary/20 shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] rounded-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300">
-        <div className="bg-primary/5 px-6 py-3 border-b border-primary/10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
-              <Inbox className="h-4 w-4" />
+    <div 
+      className={cn(
+        "fixed inset-0 z-[300] flex flex-col bg-background/60 backdrop-blur-xl animate-in fade-in duration-300",
+        isMobile ? "p-0" : "items-center justify-center p-6"
+      )}
+    >
+      <div 
+        className={cn(
+          "bg-card border-primary/10 shadow-2xl flex flex-col overflow-hidden",
+          isMobile 
+            ? "w-full h-full rounded-none pt-safe pb-safe" 
+            : "w-full max-w-2xl rounded-3xl border animate-in zoom-in-95 slide-in-from-bottom-8"
+        )}
+      >
+        {/* Header */}
+        <div className="px-6 py-4 flex items-center justify-between border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-xl text-primary">
+              <Zap className="h-5 w-5 fill-current" />
             </div>
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary/70">
-              Quick Capture to Inbox
-            </span>
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-foreground/80">
+                Quick Capture
+              </h2>
+              <p className="text-[10px] text-muted-foreground uppercase font-medium">
+                Sent to Inbox
+              </p>
+            </div>
           </div>
           <button
             type="button"
-            onClick={() => setIsOpen(false)}
-            className="p-1.5 hover:bg-primary/10 rounded-full transition-colors text-muted-foreground hover:text-foreground"
+            onClick={handleClose}
+            className="p-3 hover:bg-muted rounded-full transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-6 w-6 text-muted-foreground" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-2">
-          <div className="flex items-center gap-3 px-4 py-4">
+        {/* Input Area */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
+          <div className="flex-1 flex items-center px-8 py-12">
             <input
               ref={inputRef}
-              className="flex-1 bg-transparent border-none text-2xl font-light focus:ring-0 outline-none placeholder:text-muted-foreground/40"
-              placeholder="What's on your mind?"
+              className={cn(
+                "w-full bg-transparent border-none focus:ring-0 outline-none placeholder:text-muted-foreground/30 font-light tracking-tight transition-all",
+                isMobile ? "text-3xl" : "text-4xl"
+              )}
+              placeholder="What's the idea?"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onBlur={() => {
-                if (!inputValue) setIsOpen(false);
-              }}
+              autoComplete="off"
             />
           </div>
 
-          <div className="px-6 py-4 bg-muted/30 border-t border-border/50 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 opacity-50">
-                <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-[10px] font-mono border border-foreground/10">
-                  ESC
-                </kbd>
-                <span className="text-[10px] uppercase font-bold tracking-wider">
-                  to close
-                </span>
+          {/* Action Area */}
+          <div 
+            className={cn(
+              "px-6 py-6 border-t border-border/50 bg-muted/20 flex items-center justify-between",
+              isMobile && "pb-safe"
+            )}
+          >
+            {/* Desktop Hints */}
+            {!isMobile && (
+              <div className="flex items-center gap-4 opacity-40">
+                <div className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-[10px] font-mono border border-foreground/10">
+                    ESC
+                  </kbd>
+                  <span className="text-[10px] uppercase font-bold">Cancel</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-[10px] font-mono border border-foreground/10">
+                    ENTER
+                  </kbd>
+                  <span className="text-[10px] uppercase font-bold">Save</span>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-                Save to Inbox
-              </span>
-              <div className="p-1.5 bg-primary text-primary-foreground rounded-lg">
+            )}
+
+            {isMobile && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Inbox className="h-4 w-4" />
+                <span className="text-xs font-medium italic">Saving to Inbox...</span>
+              </div>
+            )}
+
+            {/* Primary Action Button */}
+            <button
+              type="submit"
+              disabled={!inputValue.trim()}
+              className={cn(
+                "group flex items-center gap-3 px-6 py-3 rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-30 disabled:grayscale",
+                "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/40"
+              )}
+            >
+              <span className="text-sm">Capture</span>
+              <div className="p-1 bg-white/20 rounded-md group-hover:translate-x-1 transition-transform">
                 <ArrowRight className="h-4 w-4" />
               </div>
-            </div>
+            </button>
           </div>
         </form>
       </div>

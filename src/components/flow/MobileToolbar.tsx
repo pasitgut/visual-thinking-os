@@ -1,81 +1,89 @@
-import { Inbox, Maximize, PlusCircle, ZoomIn, ZoomOut } from "lucide-react";
+"use client";
+
+import { ZoomIn, ZoomOut, Search, Inbox, Zap, Maximize } from "lucide-react";
 import { useReactFlow } from "reactflow";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useInboxStore } from "@/stores/useInboxStore";
 import { useTaskStore } from "@/stores/useTaskStore";
+import { useInboxStore } from "@/stores/useInboxStore";
+import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { cn } from "@/lib/utils";
 
+/**
+ * Unified Mobile Floating Toolbar
+ * กลับมาใช้ดีไซน์ทรง Floating แคปซูล (Pill Style) ตามที่ผู้ใช้ชอบ
+ * โดยรวมทุกปุ่มไว้ในแถบเดียว และลอยอยู่เหนือขอบล่าง
+ */
 export const MobileToolbar = () => {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
-  const { nodes, addChild } = useTaskStore();
-  const { setOpen, isOpen: isInboxOpen } = useInboxStore();
+  const { isSearchOpen, setSearchOpen } = useTaskStore();
+  const { isOpen: isInboxOpen, setOpen: setInboxOpen } = useInboxStore();
+  const { setQuickCaptureOpen } = useMobileUIStore();
 
   const handleFitView = () => {
-    fitView({ padding: 0.2, duration: 400 });
-  };
-
-  const handleAddRoot = () => {
-    // If no nodes, or to provide a quick way to add a top-level node if we ever support multi-root
-    // For now, we use it to center on root or add a subtask to root if root exists
-    if (nodes.length > 0) {
-      const rootNode = nodes.find((n) => n.id === "root") || nodes[0];
-      addChild(rootNode.id);
-    }
+    fitView({ padding: 0.3, duration: 400 });
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-2 bg-background/80 backdrop-blur-md border rounded-full shadow-lg z-50 sm:hidden">
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 sm:hidden flex items-center gap-1.5 p-1.5 bg-background/70 backdrop-blur-xl border shadow-2xl rounded-full transition-all duration-300">
+      
+      {/* Search */}
       <Button
         variant="ghost"
         size="icon"
         className={cn(
           "h-12 w-12 rounded-full",
-          isInboxOpen && "bg-primary text-primary-foreground",
+          isSearchOpen && "bg-primary text-primary-foreground"
         )}
-        onClick={() => setOpen(!isInboxOpen)}
+        onClick={() => setSearchOpen(!isSearchOpen)}
       >
-        <Inbox className="h-6 w-6" />
+        <Search className="h-5 w-5" />
       </Button>
 
-      <div className="w-[1px] h-8 bg-border mx-1" />
-
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-12 w-12 rounded-full"
-        onClick={() => zoomIn()}
-      >
-        <ZoomIn className="h-6 w-6" />
-      </Button>
-
+      {/* Zoom Out */}
       <Button
         variant="ghost"
         size="icon"
         className="h-12 w-12 rounded-full"
         onClick={() => zoomOut()}
       >
-        <ZoomOut className="h-6 w-6" />
+        <ZoomOut className="h-5 w-5" />
       </Button>
 
-      <div className="w-[1px] h-8 bg-border mx-1" />
+      {/* Quick Capture (Zap) - ปุ่มกลางเด่นแบบ Floating */}
+      <Button
+        size="icon"
+        className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 transition-transform active:scale-90"
+        onClick={() => setQuickCaptureOpen(true)}
+      >
+        <Zap className="h-7 w-7 text-primary-foreground fill-current" />
+      </Button>
 
+      {/* Zoom In / Fit View (Long press or alternate) */}
       <Button
         variant="ghost"
         size="icon"
         className="h-12 w-12 rounded-full"
-        onClick={handleFitView}
+        onClick={() => zoomIn()}
+        onDoubleClick={handleFitView}
       >
-        <Maximize className="h-6 w-6" />
+        <ZoomIn className="h-5 w-5" />
       </Button>
 
+      {/* Inbox */}
       <Button
-        variant="default"
+        variant="ghost"
         size="icon"
-        className="h-12 w-12 rounded-full shadow-md"
-        onClick={handleAddRoot}
+        className={cn(
+          "h-12 w-12 rounded-full relative",
+          isInboxOpen && "bg-primary text-primary-foreground"
+        )}
+        onClick={() => setInboxOpen(!isInboxOpen)}
       >
-        <PlusCircle className="h-6 w-6 text-primary-foreground" />
+        <Inbox className="h-5 w-5" />
+        {/* ตัวอย่าง badge อนาคต */}
+        <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border border-background hidden" />
       </Button>
+
     </div>
   );
 };
