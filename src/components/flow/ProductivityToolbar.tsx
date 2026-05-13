@@ -21,7 +21,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useInboxStore } from "@/stores/useInboxStore";
 import { useTaskStore } from "@/stores/useTaskStore";
-import { TemplateSelector } from "./TemplateSelector";
 
 export const ProductivityToolbar = () => {
   const { fitView, getViewport, screenToFlowPosition } = useReactFlow();
@@ -56,23 +55,6 @@ export const ProductivityToolbar = () => {
     <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
       <TooltipProvider>
         <div className="flex items-center gap-0.5 p-1 bg-background/80 backdrop-blur-md border rounded-xl shadow-lg pointer-events-auto animate-in slide-in-from-top-4 duration-500">
-          <Tooltip>
-            <TooltipTrigger
-              className={cn(
-                buttonVariants({
-                  variant: isInboxOpen ? "default" : "ghost",
-                  size: "icon",
-                }),
-                "h-8 w-8 cursor-pointer",
-              )}
-              onClick={() => setOpen(!isInboxOpen)}
-            >
-              <Inbox className="h-3.5 w-3.5" />
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Inbox (Alt+I)</TooltipContent>
-          </Tooltip>
-
-          <Separator orientation="vertical" className="h-3 mx-1" />
 
           <Tooltip>
             <TooltipTrigger
@@ -132,7 +114,6 @@ export const ProductivityToolbar = () => {
 
           <Separator orientation="vertical" className="h-3 mx-1" />
 
-          <TemplateSelector />
 
           <Tooltip>
             <TooltipTrigger

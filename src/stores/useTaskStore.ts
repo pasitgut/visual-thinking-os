@@ -70,7 +70,6 @@ interface TaskState {
   createExampleBoard: () => void;
   saveToFirestore: (userId: string) => void;
   applyLayout: () => void;
-  applyTemplate: (templateId: string) => void;
   selectNode: (id: string) => void;
 }
 
@@ -439,31 +438,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       if (userId) get().saveToFirestore(userId);
     },
 
-    applyTemplate: (templateId: string) => {
-      const {
-        BOARD_TEMPLATES,
-        prepareTemplate,
-      } = require("@/features/board/templates");
-      const template = BOARD_TEMPLATES.find((t: any) => t.id === templateId);
-      if (!template) return;
-
-      const { nodes: templateNodes, edges: templateEdges } =
-        prepareTemplate(template);
-      const userId = (window as any).userId;
-
-      set({
-        nodes: wireData(templateNodes),
-        edges: templateEdges.map((e: any) => ({
-          ...e,
-          data: { type: "hierarchy" },
-        })),
-        isLoading: false,
-      });
-
-      setTimeout(() => get().applyLayout(), 100);
-      if (userId) get().saveToFirestore(userId);
-    },
-
+  
     saveToFirestore: (userId: string) => {
       set({ saveStatus: "saving" });
       debouncedSave(userId, get().nodes, get().edges);
