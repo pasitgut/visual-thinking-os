@@ -408,12 +408,17 @@ export const TaskNode = memo(
       );
     };
 
+    const { onMouseLeave: onLongPressMouseLeave, ...otherLongPressHandlers } = longPressHandlers;
+
     return (
       <div
         ref={containerRef}
         onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        {...(isMobile ? longPressHandlers : {})}
+        onMouseLeave={(e) => {
+          handleMouseLeave();
+          if (isMobile) onLongPressMouseLeave(e as unknown as React.MouseEvent);
+        }}
+        {...(isMobile ? otherLongPressHandlers : {})}
         onContextMenu={(e) => isMobile && e.preventDefault()}
         className={cn(
           "group relative transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
@@ -440,10 +445,7 @@ export const TaskNode = memo(
 
         {selected && !isEditing && isHovered && !isMobile && (
           <RFNodeToolbar isVisible={true} position={Position.Top} offset={24}>
-            <div 
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
+            <div>
               <NodeToolbar
                 id={id}
                 type={nodeType}

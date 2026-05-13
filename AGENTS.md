@@ -176,28 +176,29 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 - **Serwist PWA**: Robust TypeScript-based Service Worker with Network-First navigation and an explicit Offline Fallback page.
 
 ### Mobile & Tablet UX Architecture
+
+#### Mobile Experience (Focus: Capture & Context)
 - **Adaptive Interaction Model**: 
     - **Pan Mode**: Default interaction (nodesDraggable: false) to prevent accidental moves.
     - **Edit Mode**: Triggered via long-press (500ms) for precise node dragging with haptic feedback.
 - **Contextual Action Sheets**:
     - **MobileNodeActions**: Replaces floating toolbars with a thumb-zone optimized Bottom Sheet.
-    - **Quick Actions**: Add child, delete, change type, and color pickers all reachable within one-handed range.
-- **Mobile Command Bar**:
-    - Viewport-anchored navigation for Search, Inbox, and Quick Capture.
-    - Elevated FAB for "Rapid Ideation" entry point.
-- **Viewport Constraints**:
-    - **Spatial Sanity**: Implementation of `translateExtent` (with 1000px padding) to prevent drifting into infinite empty space.
-    - **Safe Zoom**: Fixed zoom bounds for mobile (`0.4` to `1.5`) to ensure legibility and touch-target reliability.
-- **Mobile Performance Optimization**:
-    - **GPU-Safe Effects**: Removal of expensive Gaussian blur and filters on mobile. Replaced with lightweight `grayscale` and `opacity` toggles for Focus Mode and dimmed states.
-    - **Node Culling**: Strict `onlyRenderVisibleElements` enabled for mobile to optimize DOM overhead.
-    - **Animation Throttling**: Disabled animated edges and faster transitions to maintain 60fps on mobile devices.
+- **Unified Mobile Toolbar**: Glassmorphic floating pill at `bottom-8` containing Search, Zoom, and Quick Capture.
+
+#### Tablet Workspace (Focus: Productivity & Workstation)
+- **Spatial Multiplexer Layout**: Rigid 3-column architecture (Global Rail + Canvas + Context Panel).
+- **Toggleable Multi-Pane**: 
+    - Right-docked **Context Panel** for Inbox, Inspector, and Outline. 
+    - Landscape-first orientation with persistent sidebar toggles.
+- **Bimodal Interaction**:
+    - **Keyboard-First**: Global Command Palette (`Cmd + K`), graph navigation (`Arrows`, `Tab`, `Enter`), and modal control.
+    - **Stylus Precision**: Apple Pencil "Draw-to-Connect" and hover-based edge highlighting.
+- **Flexbox Spatial Architecture**: Standard DOM layout for panels to ensure React Flow viewport recalculations (`fitView`) work seamlessly without UI occlusion.
+- **Ergonomic Docking**: Action bars anchored to edges to minimize hand travel and reduce finger occlusion.
 
 ### Responsive
 - Enhanced touch targets for Mobile (min 56px for primary actions).
-- **Mobile Command Bar**: Bottom-anchored navigation and capture bar.
-- **Contextual Bottom Sheets**: Dynamic action panels for node management.
-- View switcher integrated in Header
+- **Global Header**: Shared across Tablet/Desktop for instant access to Quick Capture (Zap) and View Switching.
 - Mobile Kanban: Horizontal column swipe (85% width) and full-page vertical scroll
 
 ---
@@ -258,4 +259,11 @@ Expert in Next.js, Shadcn UI, and Tailwind CSS.
 - Ensures design consistency and accessibility.
 - Handles responsive design and mobile optimizations.
 - Focuses on "Interaction Polish" and aesthetics.
+
+## tablet_ux_architect
+Expert in high-density productivity layouts and workstation ergonomics.
+- Designs multi-pane architectures and resizable panel systems.
+- Optimizes for landscape, keyboard, and stylus (bimodal) interaction.
+- Implements advanced graph navigation and command-driven workflows.
+- Ensures session continuity and layout persistence across large screens.
 
