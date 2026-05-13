@@ -170,7 +170,7 @@ export const KanbanView = () => {
                 key={col.status}
                 column={col}
                 tasks={nodes.filter(
-                  (n) => n.data.status === col.status && n.id !== "root",
+                  (n) => n.data.status === col.status && n.id !== "root" && n.data.type === "task",
                 )}
                 onAddTask={() => addTask(col.status)}
                 onCardClick={handleCardClick}

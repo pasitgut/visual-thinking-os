@@ -68,19 +68,19 @@ export const NodeToolbar = ({
   return (
     <div
       role="presentation"
-      className="flex items-center gap-2 p-2 bg-background/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300 nodrag nopan pointer-events-auto"
+      className="flex items-center gap-1 p-1 bg-background/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300 nodrag nopan pointer-events-auto"
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Action Section */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         {!isRoot && (
           <button
             type="button"
             className={cn(
-              "flex items-center justify-center h-9 w-9 rounded-xl transition-all active:scale-95",
+              "flex items-center justify-center h-8 w-8 rounded-lg transition-all active:scale-95",
               isFocused
-                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
                 : "hover:bg-primary/10 text-primary",
             )}
             onClick={(e) => {
@@ -89,27 +89,27 @@ export const NodeToolbar = ({
             }}
             title={isFocused ? "Exit Focus" : "Focus on this subtree"}
           >
-            <Target className="h-5 w-5" />
+            <Target className="h-4 w-4" />
           </button>
         )}
 
         <button
           type="button"
-          className="flex items-center justify-center h-9 w-9 rounded-xl hover:bg-primary/10 text-primary transition-all active:scale-95"
+          className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-primary/10 text-primary transition-all active:scale-95"
           onClick={(e) => {
             e.stopPropagation();
             onAddChild();
           }}
           title="Add Subtask"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-4 w-4" />
         </button>
 
         {!isRoot && (
           <button
             type="button"
             className={cn(
-              "flex items-center justify-center h-9 w-9 rounded-xl transition-all active:scale-95",
+              "flex items-center justify-center h-8 w-8 rounded-lg transition-all active:scale-95",
               isPinned
                 ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 shadow-sm shadow-amber-200/50"
                 : "hover:bg-amber-50 text-amber-500/60",
@@ -121,9 +121,9 @@ export const NodeToolbar = ({
             title={isPinned ? "Unpin Node" : "Pin Node Position"}
           >
             {isPinned ? (
-              <PinOff className="h-4 w-4" />
+              <PinOff className="h-3.5 w-3.5" />
             ) : (
-              <Pin className="h-4 w-4" />
+              <Pin className="h-3.5 w-3.5" />
             )}
           </button>
         )}
@@ -131,18 +131,18 @@ export const NodeToolbar = ({
 
       {!isRoot && (
         <>
-          <div className="w-[1px] h-6 bg-zinc-200 dark:bg-zinc-800" />
+          <div className="w-[1px] h-4 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
 
           {/* Semantic Type Section */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             {TYPES.map((t) => (
               <button
                 type="button"
                 key={t.value}
                 className={cn(
-                  "flex items-center justify-center h-9 w-9 rounded-xl transition-all active:scale-95",
+                  "flex items-center justify-center h-8 w-8 rounded-lg transition-all active:scale-95",
                   type === t.value
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
                     : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-muted-foreground",
                 )}
                 onClick={(e) => {
@@ -151,21 +151,21 @@ export const NodeToolbar = ({
                 }}
                 title={t.label}
               >
-                <t.icon className="h-4 w-4" />
+                <t.icon className="h-3.5 w-3.5" />
               </button>
             ))}
           </div>
 
-          <div className="w-[1px] h-6 bg-zinc-200 dark:bg-zinc-800" />
+          <div className="w-[1px] h-4 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
 
           {/* Color Section */}
-          <div className="flex items-center gap-1.5 px-1">
+          <div className="flex items-center gap-1 px-1">
             {COLORS.map((c) => (
               <button
                 type="button"
                 key={c.value}
                 className={cn(
-                  "h-6 w-6 rounded-full border-2 transition-all active:scale-90 hover:scale-125 shadow-sm",
+                  "h-5 w-5 rounded-full border-2 transition-all active:scale-90 hover:scale-125 shadow-sm",
                   color === c.value
                     ? "ring-2 ring-primary ring-offset-2 dark:ring-offset-zinc-950 scale-110"
                     : "border-transparent",
@@ -180,17 +180,17 @@ export const NodeToolbar = ({
             ))}
           </div>
 
-          <div className="w-[1px] h-6 bg-zinc-200 dark:bg-zinc-800" />
+          <div className="w-[1px] h-4 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
           <button
             type="button"
-            className="flex items-center justify-center h-9 w-9 rounded-xl hover:bg-destructive/10 text-destructive transition-all active:scale-95"
+            className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-destructive/10 text-destructive transition-all active:scale-95"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
             title="Delete Task"
           >
-            <Trash2 className="h-5 w-5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </>
       )}

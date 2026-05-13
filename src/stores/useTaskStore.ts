@@ -53,7 +53,7 @@ interface TaskState {
   setSearchOpen: (open: boolean) => void;
   addChild: (parentId: string, type?: TaskType) => void;
   addSibling: (nodeId: string) => void;
-  addTask: (status?: TaskStatus, type?: TaskType) => void;
+  addTask: (status?: TaskStatus, type?: TaskType, position?: { x: number; y: number }) => void;
   deleteNode: (id: string) => void;
   updateNodeTitle: (id: string, title: string) => void;
   updateNodeStatus: (id: string, status: TaskStatus) => void;
@@ -221,6 +221,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
     },
 
     onConnect: (connection: Connection) => {
+      if (connection.source === connection.target) return;
       const updatedEdges = addEdge(
         { ...connection, type: "relationship", data: { type: "hierarchy" } },
         get().edges,
@@ -547,7 +548,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       get().addChild(parentEdge.source);
     },
 
-    addTask: (status: TaskStatus = "todo", typeOverride?: TaskType) => {
+    addTask: (status: TaskStatus = "todo", typeOverride?: TaskType, position?: { x: number; y: number }) => {
       const newNodeId = uuidv4();
       const type =
         typeOverride ||
@@ -556,9 +557,9 @@ export const useTaskStore = create<TaskState>((set, get) => {
       const newNode: TaskNode = {
         id: newNodeId,
         type: "task",
-        position: {
-          x: Math.random() * 400,
-          y: Math.random() * 400,
+        position: position || {
+          x: (Math.random() - 0.5) * 400,
+          y: (Math.random() - 0.5) * 400,
         },
         data: {
           title: "",

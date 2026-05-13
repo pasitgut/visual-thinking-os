@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import ReactFlow, {
   Background,
   BackgroundVariant,
@@ -103,20 +103,11 @@ const BoardContent = () => {
   const displayEdges = useMemo(() => {
     const baseEdges = visibleEdgesAfterCollapse;
     if (!focusNodeId) return baseEdges;
-    return baseEdges.map((edge) => {
-      const isVisible =
-        visibleNodeIds?.has(edge.source) && visibleNodeIds?.has(edge.target);
-      return {
-        ...edge,
-        zIndex: isVisible ? 500 : 0,
-        style: {
-          ...edge.style,
-          opacity: isVisible ? 1 : 0.05,
-          filter: isVisible ? "none" : "blur(1px)",
-          transition: "opacity 0.4s ease, filter 0.4s ease",
-        },
-      };
-    });
+    
+    // 1.2 Hide unrelated edges in Focus Mode
+    return baseEdges.filter((edge) => 
+      visibleNodeIds?.has(edge.source) && visibleNodeIds?.has(edge.target)
+    );
   }, [visibleEdgesAfterCollapse, visibleNodeIds, focusNodeId]);
 
   // Zoom-to-Thinking: Double click canvas to fitView
@@ -124,17 +115,24 @@ const BoardContent = () => {
     fitView({ duration: 800, padding: 0.2 });
   };
 
-  // Auto-fit view when focus changes
+  // 1.3 Improve Focus Mode zoom behavior: Trigger fitView ONLY once on Focus activation
+  const lastFittedFocusId = useRef<string | null>(null);
+  
   useEffect(() => {
-    if (focusNodeId && visibleNodeIds) {
+    if (focusNodeId && focusNodeId !== lastFittedFocusId.current && visibleNodeIds) {
+      lastFittedFocusId.current = focusNodeId;
       const timer = setTimeout(() => {
         fitView({
           nodes: Array.from(visibleNodeIds).map((id) => ({ id })),
-          padding: 0.4, // Increased padding for better breathing room
-          duration: 1000, // Slightly longer duration for "calm" glide
+          padding: 0.3, // 1.3 Suggested Constraints
+          duration: 1000,
+          minZoom: 0.4,
+          maxZoom: 1.2,
         });
       }, 50);
       return () => clearTimeout(timer);
+    } else if (!focusNodeId) {
+      lastFittedFocusId.current = null;
     }
   }, [visibleNodeIds, fitView, focusNodeId]);
 

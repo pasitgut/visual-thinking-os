@@ -9,11 +9,9 @@ export const getSubtreeIds = (rootId: string, edges: Edge[]): Set<string> => {
 
   while (queue.length > 0) {
     const currentId = queue.shift()!;
-    // Only traverse hierarchy edges for focus mode
+    // Traverse all outgoing edges for focus mode
     const children = edges
-      .filter(
-        (edge) => edge.source === currentId && edge.data?.type === "hierarchy",
-      )
+      .filter((edge) => edge.source === currentId)
       .map((edge) => edge.target);
 
     for (const childId of children) {
@@ -44,9 +42,9 @@ export const getParentPath = (
       path.unshift(currentNode);
     }
 
-    // Find parent via hierarchy edge
+    // Find parent via any edge
     const parentEdge = edges.find(
-      (edge) => edge.target === currentId && edge.data?.type === "hierarchy",
+      (edge) => edge.target === currentId,
     );
     currentId = parentEdge?.source;
 
