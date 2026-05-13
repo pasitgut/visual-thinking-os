@@ -59,8 +59,9 @@ const BoardContent = () => {
     onEdgesChange,
     onConnect,
     focusNodeId,
+    editingNodeId,
   } = useTaskStore();
-  const { fitView } = useReactFlow();
+  const { fitView, setCenter, getViewport } = useReactFlow();
   const { isMobile, isTablet } = useDeviceSpec();
   const {
     interactionState,
@@ -153,13 +154,17 @@ const BoardContent = () => {
 
   const displayEdges = useMemo(() => {
     const baseEdges = visibleEdgesAfterCollapse;
+    
+    // 1.2 Hide all edges when editing to focus on the text
+    if (editingNodeId) return [];
+
     if (!focusNodeId) return baseEdges;
     
     // 1.2 Hide unrelated edges in Focus Mode
     return baseEdges.filter((edge) => 
       visibleNodeIds?.has(edge.source) && visibleNodeIds?.has(edge.target)
     );
-  }, [visibleEdgesAfterCollapse, visibleNodeIds, focusNodeId]);
+  }, [visibleEdgesAfterCollapse, visibleNodeIds, focusNodeId, editingNodeId]);
 
   // Zoom-to-Thinking: Double click canvas to fitView
   const handlePaneDoubleClick = () => {
@@ -210,7 +215,26 @@ const BoardContent = () => {
     return () => {
       if (fitViewTimerRef.current) clearTimeout(fitViewTimerRef.current);
     };
-  }, [isTablet, fitView, nodes.length, isMobile]);
+  }, [isTablet, fitView, isMobile]); // Removed nodes.length to avoid global fitView on add
+
+  // 4.2 Creation Focus: Focus on newly created nodes
+  const prevNodesCount = useRef(nodes.length);
+  useEffect(() => {
+    if (nodes.length > prevNodesCount.current && editingNodeId) {
+      const newNode = nodes.find(n => n.id === editingNodeId);
+      if (newNode) {
+        const { x, y } = newNode.position;
+        const { zoom } = getViewport();
+        
+        // Center on the new node, slightly offset to account for toolbar
+        setCenter(x + 100, y + 25, { 
+          zoom: Math.max(zoom, 0.8), // Don't zoom out if already zoomed in, but ensure at least 0.8
+          duration: 800 
+        });
+      }
+    }
+    prevNodesCount.current = nodes.length;
+  }, [nodes, editingNodeId, setCenter, getViewport]);
 
   useKeyboardShortcuts();
 

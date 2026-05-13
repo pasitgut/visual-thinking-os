@@ -138,17 +138,19 @@ export const TaskNode = memo(
 
     useEffect(() => {
       if (isEditing && textareaRef.current) {
+        // Immediate focus attempt
         textareaRef.current.focus();
-        // Use a small timeout to ensure focus and selection happen after render
+        textareaRef.current.select();
+
+        // Secondary attempt to handle potential rendering delays in PWA/Mobile
         const timeoutId = setTimeout(() => {
           if (textareaRef.current) {
             textareaRef.current.focus();
             textareaRef.current.select();
-            // Auto-adjust height
             textareaRef.current.style.height = "auto";
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
           }
-        }, 50);
+        }, 100); // Slightly increased for reliability
         return () => clearTimeout(timeoutId);
       }
     }, [isEditing]);
@@ -398,7 +400,7 @@ export const TaskNode = memo(
         className={cn(
           "group relative transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
           isDimmed 
-            ? (isMobile ? "opacity-30 grayscale-[0.5]" : "opacity-30 blur-[1px]") 
+            ? (isMobile ? "opacity-20 grayscale-[0.8]" : "opacity-20 blur-[2px]") 
             : "opacity-100 blur-0",
           isDone && !selected && "opacity-60 grayscale-[0.4]",
           isMobile && "transition-opacity duration-200" // Faster opacity transition on mobile
@@ -449,8 +451,8 @@ export const TaskNode = memo(
             position={Position.Top}
             className={cn(
               "!w-3 !h-3 !bg-primary border-2 border-background transition-all",
-              (isVeryZoomedOut || (nodeType === "idea" && !selected) || (!isHovered && !selected))
-                ? "opacity-0"
+              (isVeryZoomedOut || (nodeType === "idea" && !selected) || (!isHovered && !selected) || isEditing)
+                ? "opacity-0 pointer-events-none"
                 : "opacity-100",
             )}
           />
@@ -463,8 +465,8 @@ export const TaskNode = memo(
           position={Position.Bottom}
           className={cn(
             "!w-3 !h-3 !bg-primary border-2 border-background transition-all",
-            (isVeryZoomedOut || (nodeType === "idea" && !selected) || (!isHovered && !selected))
-              ? "opacity-0"
+            (isVeryZoomedOut || (nodeType === "idea" && !selected) || (!isHovered && !selected) || isEditing)
+              ? "opacity-0 pointer-events-none"
               : "opacity-100",
           )}
         />
