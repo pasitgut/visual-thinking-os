@@ -256,7 +256,7 @@ const BoardContent = () => {
         maxZoom={isMobile ? 1.5 : 4}
         translateExtent={translateExtent}
         onlyRenderVisibleElements={isMobile}
-        nodesDraggable={isMobile ? interactionState === "dragging-node" : true}
+        nodesDraggable={true}
         panOnDrag={true}
         defaultEdgeOptions={{
           type: "relationship",
@@ -288,16 +288,6 @@ const BoardContent = () => {
       <FocusBreadcrumbs />
       {isEmpty && <EmptyState />}
       <MobileToolbar />
-
-      {isMobile && (
-        <BottomSheetContainer
-          open={isBottomSheetOpen}
-          onOpenChange={setBottomSheetOpen}
-          title={nodes.find((n) => n.id === selectedNodeId)?.data.title || "Node Actions"}
-        >
-          <MobileNodeActions />
-        </BottomSheetContainer>
-      )}
     </div>
   );
 };

@@ -97,25 +97,6 @@ export const TaskNode = memo(
     const { isMobile } = useDeviceSpec();
     const { setInteractionState, setSelectedNodeId: setMobileSelectedNodeId } = useMobileUIStore();
 
-    const longPressHandlers = useLongPress({
-      onLongPress: () => {
-        if (isMobile) {
-          setInteractionState("dragging-node");
-          setMobileSelectedNodeId(id);
-          // Future: Add haptic feedback here
-          if (navigator.vibrate) navigator.vibrate(50);
-        }
-      },
-      onClick: () => {
-        if (isMobile) {
-          setInteractionState("node-selected");
-          setMobileSelectedNodeId(id);
-          useTaskStore.getState().setSelectedNodeIds([id]);
-          useMobileUIStore.getState().setBottomSheetOpen(true);
-        }
-      },
-    });
-
     const isDimmed = editingNodeId !== null && editingNodeId !== id;
     const isDone = data.status === "done";
     const depth = data.depth ?? 0;
@@ -408,17 +389,11 @@ export const TaskNode = memo(
       );
     };
 
-    const { onMouseLeave: onLongPressMouseLeave, ...otherLongPressHandlers } = longPressHandlers;
-
     return (
       <div
         ref={containerRef}
         onMouseEnter={handleMouseEnter}
-        onMouseLeave={(e) => {
-          handleMouseLeave();
-          if (isMobile) onLongPressMouseLeave(e as unknown as React.MouseEvent);
-        }}
-        {...(isMobile ? otherLongPressHandlers : {})}
+        onMouseLeave={handleMouseLeave}
         onContextMenu={(e) => isMobile && e.preventDefault()}
         className={cn(
           "group relative transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
@@ -443,7 +418,7 @@ export const TaskNode = memo(
           />
         )} */}
 
-        {selected && !isEditing && isHovered && !isMobile && (
+        {selected && !isEditing && (isHovered || isMobile) && (
           <RFNodeToolbar isVisible={true} position={Position.Top} offset={24}>
             <div>
               <NodeToolbar
