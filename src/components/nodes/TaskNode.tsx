@@ -445,31 +445,53 @@ export const TaskNode = memo(
           </div>
         )}
 
-        {nodeType !== "root" && (
-          <Handle
-            type="target"
-            position={Position.Top}
-            className={cn(
-              "!w-3 !h-3 !bg-primary border-2 border-background transition-all",
-              (isVeryZoomedOut || (nodeType === "idea" && !selected) || (!isHovered && !selected) || isEditing)
-                ? "opacity-0 pointer-events-none"
-                : "opacity-100",
-            )}
-          />
-        )}
+        {/* Handles for all 4 directions, each being both source and target */}
+        {(["top", "bottom", "left", "right"] as const).map((pos) => {
+          const position =
+            pos === "top"
+              ? Position.Top
+              : pos === "bottom"
+                ? Position.Bottom
+                : pos === "left"
+                  ? Position.Left
+                  : Position.Right;
+
+          const isVisible = (isHovered || selected) && !isVeryZoomedOut && !isEditing;
+
+          return (
+            <div key={pos}>
+              {/* Target Handle (Input) */}
+              <Handle
+                type="target"
+                position={position}
+                id={`${pos}-target`}
+                className={cn(
+                  "!w-4 !h-4 !bg-primary/20 border-2 border-primary transition-all duration-300 hover:!bg-primary hover:!scale-125 hover:z-50",
+                  isVisible ? "opacity-100 scale-100" : "opacity-0 scale-50 pointer-events-none",
+                )}
+                style={{
+                  [pos]: "-8px", // Move slightly outside
+                }}
+              />
+              {/* Source Handle (Output) */}
+              <Handle
+                type="source"
+                position={position}
+                id={`${pos}-source`}
+                className={cn(
+                  "!w-4 !h-4 !bg-primary border-2 border-background shadow-sm transition-all duration-300 hover:!scale-125 hover:z-50",
+                  isVisible ? "opacity-100 scale-100" : "opacity-0 scale-50 pointer-events-none",
+                )}
+                style={{
+                  [pos]: "-8px", // Overlap target handle for "bidirectional" feel
+                  zIndex: 2,
+                }}
+              />
+            </div>
+          );
+        })}
 
         {renderContent()}
-
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          className={cn(
-            "!w-3 !h-3 !bg-primary border-2 border-background transition-all",
-            (isVeryZoomedOut || (nodeType === "idea" && !selected) || (!isHovered && !selected) || isEditing)
-              ? "opacity-0 pointer-events-none"
-              : "opacity-100",
-          )}
-        />
       </div>
     );
   },

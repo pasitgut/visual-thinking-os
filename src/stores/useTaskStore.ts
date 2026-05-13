@@ -17,6 +17,8 @@ import {
   getIncrementalPosition,
   reconcileLayout,
 } from "@/lib/reactflow/spatialEngine";
+import { getLayoutedElements } from "@/lib/reactflow/layoutUtils";
+import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
 import { BoardService } from "@/services/boardService";
 import type {
   InteractionMode,
@@ -168,7 +170,6 @@ export const useTaskStore = create<TaskState>((set, get) => {
           const dy = change.position.y - node.position.y;
           
           if (dx !== 0 || dy !== 0) {
-            const { getSubtreeIds } = require("@/lib/reactflow/focusUtils");
             const subtreeIds = getSubtreeIds(node.id, currentEdges);
             subtreeIds.delete(node.id); // Don't move the node itself twice
 
@@ -730,11 +731,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
 
     applyLayout: () => {
       const { nodes, edges } = get();
-      const { nodes: suggestedNodes } =
-        require("@/lib/reactflow/layoutUtils").getLayoutedElements(
-          nodes,
-          edges,
-        );
+      const { nodes: suggestedNodes } = getLayoutedElements(nodes, edges);
 
       // Use Soft Layout Reconciliation
       const layoutedNodes = reconcileLayout(nodes, suggestedNodes);
