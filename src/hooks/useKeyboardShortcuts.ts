@@ -8,16 +8,18 @@ export const useKeyboardShortcuts = () => {
     addChild,
     addSibling,
     deleteNode,
+    deleteEdges,
     saveToFirestore,
     selectNode,
-    setEditingNodeId,
     nodes,
     edges,
     setBookmark,
     bookmarks,
+    popFocusRootId,
+    focusRootId,
   } = useTaskStore();
 
-  const { setNodes, fitView, setCenter, getViewport, setViewport } = useReactFlow();
+  const { fitView, setCenter, getViewport, setViewport } = useReactFlow();
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -37,6 +39,28 @@ export const useKeyboardShortcuts = () => {
 
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const modifierKey = isMac ? event.metaKey : event.ctrlKey;
+
+      // Edge Deletion
+      if (event.key === "Delete" || event.key === "Backspace") {
+        const selectedEdges = edges.filter((e) => e.selected);
+        if (selectedEdges.length > 0 && selectedNodeIds.length === 0) {
+          event.preventDefault();
+          deleteEdges(selectedEdges.map((e) => e.id));
+          return;
+        }
+      }
+
+      // Progressive Exploration: Back Navigation (Backspace or Alt + Left)
+      if (
+        (event.key === "Backspace" && selectedNodeIds.length === 0) ||
+        (event.altKey && event.key === "ArrowLeft")
+      ) {
+        if (focusRootId !== "root") {
+          event.preventDefault();
+          popFocusRootId();
+          return;
+        }
+      }
 
       // Spatial Bookmarks (Alt + 1-9)
       if (event.altKey && event.key >= "1" && event.key <= "9") {
@@ -88,6 +112,7 @@ export const useKeyboardShortcuts = () => {
               const centerX = (parentNode.position.x + newNode.position.x) / 2;
               const centerY = (parentNode.position.y + newNode.position.y) / 2;
               setCenter(centerX, centerY, {
+                zoom: Math.min(getViewport().zoom, 0.8),
                 duration: 600, // Slightly slower for context preservation
               });
             }
@@ -109,8 +134,6 @@ export const useKeyboardShortcuts = () => {
             const newNodeId = state.selectedNodeIds[0];
             const newNode = state.nodes.find((n) => n.id === newNodeId);
             if (newNode) {
-              // For siblings, we can just center on the new node or midpoint between sibling and parent
-              // Let's stick to centering on the new node for now as it's cleaner for siblings
               setCenter(newNode.position.x, newNode.position.y, {
                 duration: 600,
               });
@@ -187,7 +210,6 @@ export const useKeyboardShortcuts = () => {
             selectNode(targetId);
             const targetNode = nodes.find((n) => n.id === targetId);
             if (targetNode) {
-              // Ensure the node is in view
               setCenter(targetNode.position.x, targetNode.position.y, {
                 duration: 300,
               });
@@ -201,17 +223,18 @@ export const useKeyboardShortcuts = () => {
       addChild,
       addSibling,
       deleteNode,
+      deleteEdges,
       saveToFirestore,
       selectNode,
       nodes,
       edges,
-      setNodes,
-      fitView,
       setCenter,
       setBookmark,
       bookmarks,
       getViewport,
       setViewport,
+      popFocusRootId,
+      focusRootId,
     ],
   );
 

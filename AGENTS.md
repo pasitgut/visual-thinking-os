@@ -130,6 +130,7 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 
 ### Semantic Node Type System
 - Config-driven types: Action, Idea, Issue, Decision, Question, Reference
+- **Global Default**: New nodes default to **Idea** type.
 - User-selectable Color Overrides (priority over type defaults)
 - Clean UI: Removed redundant structural roles (Parent/Child) from toolbar
 - Visual cues and icons for instant recognition
@@ -143,6 +144,14 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
     - `Enter`: Create sibling nodes.
     - `Shift + Tab`: Navigate to parent.
     - `Arrows`: Hierarchical navigation between siblings, parents, and children.
+    - `Delete / Backspace`: Removes selected nodes or **selected edges**.
+- **Effortless Connection UX**: Large, invisible "Connection Zones" on all 4 sides of a node make creating relationships feel fluid.
+    - **Adaptive Hit Areas**: Automatically scales zone size for Touch/Stylus (large targets) vs. Mouse (precise targets).
+    - **Perimeter Interaction**: Users can drag from the outer edges of a node to start a connection, while the center 60% remains reserved for node dragging and text interaction.
+    - **Visual Feedback**: Subtle directional indicators appear on hover or selection to guide the user.
+- **Auto-Node Creation**: Dragging a connection from a node and dropping it onto the empty canvas automatically creates a new **Idea** node, connects it with a **Related** edge, and immediately focuses the title for editing.
+- **Structural Relationship Hierarchy**: Both `Hierarchy` (Subtask) and `Related` edges are treated as structural connections for progressive exploration, branch collapse, and navigation.
+- **Global Edge Default**: New connections default to **Related** type.
 - **Subtree Dragging**: Moving a parent node automatically moves its entire descendant tree, preserving branch-specific mental geography. Independent of edge relationship types.
 - **Subtree Collapse**: Fold/unfold branches to manage complexity. Culled nodes are removed from render cycle for performance.
 - **Semantic Zoom**: Node detail intelligently scales based on zoom level (Macro/Mid/Micro thresholds). Macro view renders minimal color-coded blocks for peak performance and clarity.
@@ -159,6 +168,11 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 - **Inline Editing UX**: Auto-resizing textareas, instant focus on creation, and cursor stability.
 - **Search Palette (Cmd+K)**: Instant node search and jump-to-focus navigation. Includes **Recent History** section for rapid context switching.
 - **Spatial Bookmarks**: Save and jump to specific camera views using `Alt + 1-9` (Jump) and `Alt + Ctrl + 1-9` (Set). Solves the "getting lost" problem in massive boards.
+- **Focus-First Progressive Exploration**: A cinematic navigation system designed for calm and intentional discovery of large mindmaps. 
+    - **Depth-Limited Rendering**: Automatically restricts the visible graph to the **Current Focus Root + 2 levels of depth**.
+    - **Orientation Preservation**: Subtle rendering of the parent node (low opacity + blur/grayscale) to maintain spatial context.
+    - **Cinematic Transitions**: Multi-stage animation sequence (Zoom out → Pan → Progressive subtree reveal → Zoom in) when diving into new nodes.
+    - **Navigation History**: Persistent breadcrumb trail and stack-based history (`push`/`pop`) for moving through hierarchical thought spaces.
 - **Root Indicator**: Subtle "Return to Start" guidance when the root node is off-screen.
 - **Zoom-to-Thinking**: Double-click canvas to instantly fit and reorient the view.
 - **Progressive Disclosure**: Node toolbars and connection handles only appear when selected or hovered, reducing visual noise.

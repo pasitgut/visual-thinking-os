@@ -14,9 +14,11 @@ import "reactflow/dist/style.css";
 
 import { RelationshipEdge } from "@/components/flow/RelationshipEdge";
 import { TaskNode } from "@/components/nodes/TaskNode";
+import { v4 as uuidv4 } from "uuid";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
 import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
+import { getVisibleNodeIdsByDepth } from "@/lib/reactflow/focusTraversal";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { useMobileUIStore } from "@/stores/useMobileUIStore";
 import { BrainstormOverlay } from "./BrainstormOverlay";
@@ -59,9 +61,12 @@ const BoardContent = () => {
     onEdgesChange,
     onConnect,
     focusNodeId,
+    focusRootId,
     editingNodeId,
+    viewport: persistedViewport,
+    setViewport: setPersistedViewport,
   } = useTaskStore();
-  const { fitView, setCenter, getViewport } = useReactFlow();
+  const { fitView, setCenter, getViewport, zoomOut, zoomIn, screenToFlowPosition, setViewport } = useReactFlow();
   const { isMobile, isTablet } = useDeviceSpec();
   const {
     interactionState,
@@ -71,6 +76,71 @@ const BoardContent = () => {
     isBottomSheetOpen,
     setBottomSheetOpen,
   } = useMobileUIStore();
+
+  // 3. Persist Viewport
+  useEffect(() => {
+    if (persistedViewport && persistedViewport.zoom > 0) {
+      setViewport(persistedViewport);
+    }
+  }, [setViewport]); // Run once on mount
+
+  const onMoveEndInternal = (event: any, viewport: any) => {
+    setPersistedViewport(viewport);
+    if (isMobile) {
+      setInteractionState(useMobileUIStore.getState().selectedNodeId ? "node-selected" : "idle");
+    }
+  };
+
+  // 6. Drag Edge to Create Node
+  const connectionNodeId = useRef<string | null>(null);
+  const didConnect = useRef(false);
+  
+  const onConnectStart = (_: any, { nodeId }: any) => {
+    connectionNodeId.current = nodeId;
+    didConnect.current = false;
+  };
+
+  const onConnectEnd = (event: any) => {
+    if (!connectionNodeId.current || didConnect.current) {
+      connectionNodeId.current = null;
+      return;
+    }
+
+    // Use document.elementFromPoint for accurate target detection (especially on touch)
+    const clientX = event.clientX ?? event.touches?.[0]?.clientX ?? event.changedTouches?.[0]?.clientX;
+    const clientY = event.clientY ?? event.touches?.[0]?.clientY ?? event.changedTouches?.[0]?.clientY;
+    
+    if (clientX !== undefined && clientY !== undefined) {
+      const element = document.elementFromPoint(clientX, clientY);
+      const targetIsPane = element?.classList.contains("react-flow__pane");
+      const targetIsNode = element?.closest(".react-flow__node");
+      const targetIsHandle = element?.closest(".react-flow__handle");
+
+      // Only create a node if we dropped on the pane and NOT on an existing node or handle
+      if (targetIsPane && !targetIsNode && !targetIsHandle) {
+        const position = screenToFlowPosition({
+          x: clientX,
+          y: clientY,
+        });
+
+        // Offset to center the node under the cursor
+        // Based on TaskNode default dimensions (approx 200x50)
+        const adjustedPosition = {
+          x: position.x - 100,
+          y: position.y - 25,
+        };
+
+        useTaskStore.getState().addChild(connectionNodeId.current, "idea", adjustedPosition);
+      }
+    }
+
+    connectionNodeId.current = null;
+  };
+
+  const onConnectInternal = (params: any) => {
+    didConnect.current = true;
+    onConnect(params);
+  };
 
   // 1.1 Viewport Clamping: Calculate bounds for translateExtent
   const translateExtent = useMemo(() => {
@@ -119,6 +189,11 @@ const BoardContent = () => {
     );
   }, [visibleNodesAfterCollapse, edges]);
 
+  // Progressive Exploration Rendering Logic
+  const explorationNodeIds = useMemo(() => {
+    return getVisibleNodeIdsByDepth(focusRootId, visibleNodesAfterCollapse, visibleEdgesAfterCollapse, "root", 2);
+  }, [focusRootId, visibleNodesAfterCollapse, visibleEdgesAfterCollapse]);
+
   // 2. Focus Mode Logic: Filter visible nodes and edges from the ALREADY cullled list
   const visibleNodeIds = useMemo(() => {
     if (!focusNodeId) return null;
@@ -126,45 +201,93 @@ const BoardContent = () => {
   }, [focusNodeId, visibleEdgesAfterCollapse]);
 
   const displayNodes = useMemo(() => {
-    const baseNodes = visibleNodesAfterCollapse;
-    if (!focusNodeId) return baseNodes;
+    // Combine Progressive Exploration (Hard Limit) with Focus Mode (Visual Filter)
+    const baseNodes = visibleNodesAfterCollapse.filter(n => explorationNodeIds.has(n.id));
+    
+    // Find parent of focusRootId to de-emphasize it
+    const parentEdge = edges.find(e => e.target === focusRootId && (e.data?.type === "hierarchy" || e.data?.type === "related"));
+    const parentId = parentEdge?.source;
+
     return baseNodes.map((node) => {
-      const isVisible = visibleNodeIds?.has(node.id);
+      const isVisible = focusNodeId ? visibleNodeIds?.has(node.id) : true;
+      const isParent = node.id === parentId;
       
-      // 1.2 Replace Blur with Grayscale on Mobile
       const filterEffect = isMobile 
-        ? (isVisible ? "none" : "grayscale(1)") 
-        : (isVisible ? "none" : "blur(2px)");
+        ? (isVisible ? (isParent ? "grayscale(1)" : "none") : "grayscale(1)") 
+        : (isVisible ? (isParent ? "blur(1px) grayscale(0.5)" : "none") : "blur(2px)");
+
+      const opacity = isVisible ? (isParent ? 0.3 : 1) : 0.1;
 
       return {
         ...node,
-        zIndex: isVisible ? 1000 : 0,
+        zIndex: isVisible ? (isParent ? 0 : 1000) : 0,
         style: {
           ...node.style,
-          opacity: isVisible ? 1 : 0.1,
+          opacity,
           filter: filterEffect,
-          pointerEvents: isVisible ? "all" : "none",
+          pointerEvents: isVisible && !isParent ? "all" : "none",
           transition: isMobile 
-            ? "opacity 0.2s ease" // Faster transition on mobile
+            ? "opacity 0.2s ease" 
             : "opacity 0.4s ease, filter 0.4s ease",
         } as React.CSSProperties,
       };
     });
-  }, [visibleNodesAfterCollapse, visibleNodeIds, focusNodeId, isMobile]);
+  }, [visibleNodesAfterCollapse, explorationNodeIds, visibleNodeIds, focusNodeId, isMobile, edges, focusRootId]);
 
   const displayEdges = useMemo(() => {
-    const baseEdges = visibleEdgesAfterCollapse;
+    const baseEdges = visibleEdgesAfterCollapse.filter(
+      (e) => explorationNodeIds.has(e.source) && explorationNodeIds.has(e.target)
+    );
     
-    // 1.2 Hide all edges when editing to focus on the text
     if (editingNodeId) return [];
-
     if (!focusNodeId) return baseEdges;
     
-    // 1.2 Hide unrelated edges in Focus Mode
     return baseEdges.filter((edge) => 
       visibleNodeIds?.has(edge.source) && visibleNodeIds?.has(edge.target)
     );
-  }, [visibleEdgesAfterCollapse, visibleNodeIds, focusNodeId, editingNodeId]);
+  }, [visibleEdgesAfterCollapse, explorationNodeIds, visibleNodeIds, focusNodeId, editingNodeId]);
+
+  // Cinematic Transition Logic
+  const lastFocusRootId = useRef(focusRootId);
+  useEffect(() => {
+    if (focusRootId !== lastFocusRootId.current) {
+      const targetNode = nodes.find(n => n.id === focusRootId);
+      if (targetNode) {
+        // Required animation sequence:
+        // 1. slight zoom out
+        // 2. smooth pan toward selected node
+        // 3. irrelevant nodes fade/de-emphasize (handled by displayNodes)
+        // 4. selected node centers
+        // 5. viewport zooms inward
+        // 6. subtree re-renders progressively (handled by React)
+        // 7. new nodes stagger/fade into place (handled by TaskNode animations)
+
+        const performTransition = async () => {
+          // 1. Slight zoom out
+          const { x, y, zoom } = getViewport();
+          
+          // 2 & 4. Smooth pan and center
+          setCenter(targetNode.position.x + 100, targetNode.position.y, {
+            zoom: zoom * 0.8, // Slight zoom out during pan
+            duration: 800,
+          });
+
+          // Wait for pan
+          await new Promise(r => setTimeout(r, 850));
+
+          // 5. Zoom inward
+          fitView({
+            nodes: [{ id: focusRootId }, ...edges.filter(e => e.source === focusRootId).map(e => ({ id: e.target }))],
+            duration: 1000,
+            padding: isMobile ? 0.4 : 0.2,
+          });
+        };
+
+        performTransition();
+      }
+      lastFocusRootId.current = focusRootId;
+    }
+  }, [focusRootId, nodes, edges, setCenter, fitView, getViewport, isMobile]);
 
   // Zoom-to-Thinking: Double click canvas to fitView
   const handlePaneDoubleClick = () => {
@@ -247,13 +370,11 @@ const BoardContent = () => {
         edges={displayEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        onConnect={onConnectInternal}
+        onConnectStart={onConnectStart}
+        onConnectEnd={onConnectEnd}
         onMoveStart={() => isMobile && setInteractionState("panning")}
-        onMoveEnd={() => {
-          if (isMobile) {
-            setInteractionState(useMobileUIStore.getState().selectedNodeId ? "node-selected" : "idle");
-          }
-        }}
+        onMoveEnd={onMoveEndInternal}
         onNodeDragStop={() => {
           if (isMobile) {
             setInteractionState("node-selected");
@@ -273,8 +394,8 @@ const BoardContent = () => {
         edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{
-          padding: isMobile ? 0.3 : 0.1,
-          maxZoom: 1.5,
+          padding: isMobile ? 0.8 : 0.5,
+          maxZoom: 1.0,
         }}
         minZoom={isMobile ? 0.4 : 0.2}
         maxZoom={isMobile ? 1.5 : 4}
@@ -282,6 +403,8 @@ const BoardContent = () => {
         onlyRenderVisibleElements={isMobile}
         nodesDraggable={true}
         panOnDrag={true}
+        edgesFocusable={true}
+        connectionRadius={30}
         defaultEdgeOptions={{
           type: "relationship",
           animated: !isMobile, // Disable edge animation on mobile for performance
