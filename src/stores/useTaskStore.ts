@@ -19,6 +19,7 @@ import {
   getIncrementalPosition,
   reconcileLayout,
 } from "@/lib/reactflow/spatialEngine";
+import { updateDynamicHandles, calculateBestHandles } from "@/lib/reactflow/handleUtils";
 import { getLayoutedElements } from "@/lib/reactflow/layoutUtils";
 import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
 import { BoardService } from "@/services/boardService";
@@ -34,6 +35,7 @@ import type {
 } from "@/types/task";
 
 interface TaskState {
+// ... rest of imports and interface ...
   nodes: TaskNode[];
   edges: Edge[];
   currentView: ViewType;
@@ -227,6 +229,11 @@ export const useTaskStore = create<TaskState>()(
 
           const finalNodes = applyNodeChanges(changes, updatedNodes) as TaskNode[];
           
+          let finalEdges = currentEdges;
+          if (changes.some((c) => c.type === "position")) {
+            finalEdges = updateDynamicHandles(finalNodes, currentEdges);
+          }
+
           const selectionChange = changes.find((c) => c.type === "select");
           
           if (selectionChange) {
@@ -236,11 +243,12 @@ export const useTaskStore = create<TaskState>()(
             
             set({
               nodes: finalNodes,
+              edges: finalEdges,
               selectedNodeIds: selectedIds,
               editingNodeId: selectedIds.length === 0 ? null : get().editingNodeId,
             });
           } else {
-            set({ nodes: finalNodes });
+            set({ nodes: finalNodes, edges: finalEdges });
           }
 
           if (changes.some((c) => c.type === "position")) {
@@ -258,8 +266,27 @@ export const useTaskStore = create<TaskState>()(
 
         onConnect: (connection: Connection) => {
           if (connection.source === connection.target) return;
+          
+          let { sourceHandle, targetHandle } = connection;
+          if (!sourceHandle || !targetHandle) {
+            const { nodes } = get();
+            const sourceNode = nodes.find((n) => n.id === connection.source);
+            const targetNode = nodes.find((n) => n.id === connection.target);
+            if (sourceNode && targetNode) {
+              const best = calculateBestHandles(sourceNode, targetNode);
+              sourceHandle = sourceHandle || best.sourceHandle;
+              targetHandle = targetHandle || best.targetHandle;
+            }
+          }
+
           const updatedEdges = addEdge(
-            { ...connection, type: "relationship", data: { type: "related" } },
+            {
+              ...connection,
+              sourceHandle,
+              targetHandle,
+              type: "relationship",
+              data: { type: "related" },
+            },
             get().edges,
           );
           set({ edges: updatedEdges });
@@ -499,10 +526,13 @@ export const useTaskStore = create<TaskState>()(
             },
           };
 
+          const bestHandles = calculateBestHandles(parentNode, newNode);
           const newEdge: Edge = {
             id: `e-${parentId}-${newNodeId}`,
             source: parentId,
             target: newNodeId,
+            sourceHandle: bestHandles.sourceHandle,
+            targetHandle: bestHandles.targetHandle,
             data: { type: "related" },
           };
 
@@ -787,7 +817,8 @@ export const useTaskStore = create<TaskState>()(
           const { nodes, edges } = get();
           const { nodes: suggestedNodes } = getLayoutedElements(nodes, edges);
           const layoutedNodes = reconcileLayout(nodes, suggestedNodes);
-          set({ nodes: layoutedNodes });
+          const updatedEdges = updateDynamicHandles(layoutedNodes, edges);
+          set({ nodes: layoutedNodes, edges: updatedEdges });
           const userId = (window as any).userId;
           if (userId) get().saveToFirestore(userId);
         },
