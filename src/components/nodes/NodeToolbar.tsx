@@ -1,6 +1,6 @@
 "use client";
 
-import { Pin, PinOff, Plus, Target, Trash2, type LucideIcon } from "lucide-react";
+import { Flame, Pin, PinOff, Plus, Target, Trash2, type LucideIcon } from "lucide-react";
 import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -13,11 +13,13 @@ interface NodeToolbarProps {
   type: TaskType;
   color: TaskColor;
   isPinned?: boolean;
+  isImportant?: boolean;
   onAddChild: () => void;
   onDelete: () => void;
   onTypeChange: (type: TaskType) => void;
   onColorChange: (color: TaskColor) => void;
   onTogglePin: () => void;
+  onToggleImportance: (isImportant: boolean) => void;
   isRoot?: boolean;
 }
 
@@ -61,8 +63,10 @@ export const NodeToolbar = ({
   onTypeChange,
   onColorChange,
   onTogglePin,
+  onToggleImportance,
   isRoot,
   isPinned,
+  isImportant,
 }: NodeToolbarProps) => {
   const { focusNodeId, setFocusNodeId } = useTaskStore();
   const { isMobile } = useDeviceSpec();
@@ -195,6 +199,27 @@ export const NodeToolbar = ({
               />
             ))}
           </div>
+
+          <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
+          
+          {/* Importance Toggle */}
+          <button
+            type="button"
+            className={cn(
+              "flex items-center justify-center rounded-lg transition-all active:scale-95",
+              btnClass,
+              isImportant
+                ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105"
+                : "hover:bg-amber-500/10 text-amber-500/60",
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleImportance(!isImportant);
+            }}
+            title={isImportant ? "Mark as Normal" : "Mark as Important"}
+          >
+            <Flame className={cn(iconClass, isImportant && "animate-pulse")} />
+          </button>
 
           <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
           <button

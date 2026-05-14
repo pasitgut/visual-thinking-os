@@ -457,8 +457,25 @@ export const TaskNode = memo(
           isImportant && "z-20",
         )}
       >
+        {/* Premium "Important" Aura */}
         {isImportant && (
-          <div className="absolute inset-0 -m-1 rounded-[1.2rem] bg-gradient-to-t from-amber-500/20 via-orange-500/10 to-transparent blur-xl animate-pulse -z-10" />
+          <div className={cn(
+            "absolute inset-0 -z-10 pointer-events-none transition-all duration-1000 ease-in-out",
+            isVeryZoomedOut ? "opacity-0 scale-90" : "opacity-100 scale-100"
+          )}>
+            {/* Calm Golden Glow */}
+            <div className="absolute inset-[-6px] rounded-[1.6rem] bg-amber-400/20 blur-2xl motion-safe:animate-aura-float" />
+            
+            {/* Subtle Inner Glow */}
+            <div className="absolute inset-0 rounded-xl border border-amber-400/20 shadow-[0_0_20px_rgba(251,191,36,0.15)]" />
+
+            {/* Tiny Flame-like Top Aura */}
+            {!isMid && (
+              <div 
+                className="absolute inset-x-12 -top-12 h-24 bg-gradient-to-t from-amber-500/20 via-amber-400/5 to-transparent blur-2xl motion-safe:animate-flame-subtle" 
+              />
+            )}
+          </div>
         )}
 
         {selected && !isEditing && (isHovered || isMobile) && (
