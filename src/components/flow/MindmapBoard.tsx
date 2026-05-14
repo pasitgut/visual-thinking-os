@@ -54,28 +54,22 @@ const BoardContent = () => {
     [],
   );
 
-  const {
-    nodes,
-    edges,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    focusNodeId,
-    focusRootId,
-    editingNodeId,
-    viewport: persistedViewport,
-    setViewport: setPersistedViewport,
-  } = useTaskStore();
-  const { fitView, setCenter, getViewport, zoomOut, zoomIn, screenToFlowPosition, setViewport } = useReactFlow();
+  // FINE-GRAINED SELECTORS
+  const nodes = useTaskStore((s) => s.nodes);
+  const edges = useTaskStore((s) => s.edges);
+  const onNodesChange = useTaskStore((s) => s.onNodesChange);
+  const onEdgesChange = useTaskStore((s) => s.onEdgesChange);
+  const onConnect = useTaskStore((s) => s.onConnect);
+  const focusNodeId = useTaskStore((s) => s.focusNodeId);
+  const focusRootId = useTaskStore((s) => s.focusRootId);
+  const editingNodeId = useTaskStore((s) => s.editingNodeId);
+  const persistedViewport = useTaskStore((s) => s.viewport);
+  const setPersistedViewport = useTaskStore((s) => s.setViewport);
+
+  const { fitView, setCenter, getViewport, setViewport, screenToFlowPosition } = useReactFlow();
   const { isMobile, isTablet } = useDeviceSpec();
-  const {
-    interactionState,
-    setInteractionState,
-    selectedNodeId,
-    setSelectedNodeId,
-    isBottomSheetOpen,
-    setBottomSheetOpen,
-  } = useMobileUIStore();
+  const setInteractionState = useMobileUIStore((s) => s.setInteractionState);
+  const setSelectedNodeId = useMobileUIStore((s) => s.setSelectedNodeId);
 
   // 3. Persist Viewport
   useEffect(() => {

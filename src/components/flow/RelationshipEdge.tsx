@@ -57,6 +57,7 @@ export const RelationshipEdge = memo((props: EdgeProps<TaskEdgeData>) => {
   } = props;
 
   const { setEdges } = useReactFlow();
+  // STABLE SELECTOR
   const updateEdgeType = useTaskStore((state) => state.updateEdgeType);
 
   const [edgePath, labelX, labelY] = getBezierPath({

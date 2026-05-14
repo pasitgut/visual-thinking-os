@@ -1,8 +1,17 @@
 # AGENTS.md
 
-## Project Overview
+## Performance & Optimization Standards
 
-This project is a Visual Thinking Workspace designed to help users transform ideas into structured execution through a flexible node-based system.
+- **60fps Interaction Lifecycle**:
+    - **Throttled Handle Updates**: Edge handle recalculations are throttled (32ms) during active dragging to prioritize movement smoothness.
+    - **Subtree Drag Optimization**: Smart subtree position updates only calculate when active movement is detected, minimizing CPU overhead.
+    - **Filter Culling**: GPU-heavy effects (blur, grayscale) are automatically disabled during active dragging and at macro zoom levels.
+- **Render Efficiency**:
+    - **Fine-Grained Selectors**: Components use targeted Zustand selectors to avoid rerendering the entire board when unrelated state changes.
+    - **Memoized Graph Projections**: Visibility filters, focus modes, and progressive exploration logic are fully memoized to prevent O(N) recalculation storms.
+    - **Dynamic Detail Culling**: Nodes automatically switch to lightweight "macro" representations at high zoom levels to maintain high frame rates in large graphs.
+- **Persistence Optimization**:
+    - **Optimized Firestore Sync**: Debounced (5s) background serialization reduces the impact of auto-saving on interaction latency.
 
 The product combines:
 - visual mindmapping
