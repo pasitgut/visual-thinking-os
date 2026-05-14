@@ -71,7 +71,9 @@ export const SyncStatus = () => {
             title="Retry Sync"
           >
             <RefreshCw className="h-3 w-3 group-hover:rotate-180 transition-transform duration-500" />
-            <span className="text-[9px] font-bold uppercase tracking-tighter">ลองใหม่</span>
+            <span className="text-[9px] font-bold uppercase tracking-tighter">
+              ลองใหม่
+            </span>
           </button>
         </div>
       )}

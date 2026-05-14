@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  ChevronDown,
-  Columns3,
-  Network,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronDown, Columns3, type LucideIcon, Network } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,

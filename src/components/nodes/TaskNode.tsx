@@ -1,6 +1,15 @@
 "use client";
 
-import { CheckCircle2, ChevronDown, ChevronRight, Circle, Clock, Pin, Calendar as CalendarIcon } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import {
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  Clock,
+  Pin,
+} from "lucide-react";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -11,64 +20,22 @@ import {
   useStore,
   useUpdateNodeInternals,
 } from "reactflow";
-import { format, isToday, isTomorrow, isBefore, startOfDay, parseISO } from "date-fns";
-import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
-import { cn } from "@/lib/utils";
-import { useTaskStore } from "@/stores/useTaskStore";
-import { useDeviceSpec } from "@/hooks/useDeviceSpec";
-import { useMobileUIStore } from "@/stores/useMobileUIStore";
-import { useLongPress } from "@/hooks/useLongPress";
-import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
-import { isNodeAtDepthLimit } from "@/lib/reactflow/focusTraversal";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import type {
-  TaskColor,
-  TaskNodeData,
-  TaskStatus,
-} from "@/types/task";
+import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
+import { useDeviceSpec } from "@/hooks/useDeviceSpec";
+import { useLongPress } from "@/hooks/useLongPress";
+import { getDeadlineLabel, getDeadlineStyles } from "@/lib/dateUtils";
+import { getSubtreeIds, isNodeAtDepthLimit } from "@/lib/reactflow/graphUtils";
+import { cn } from "@/lib/utils";
+import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { useTaskStore } from "@/stores/useTaskStore";
+import type { TaskColor, TaskNodeData, TaskStatus } from "@/types/task";
 import { NodeToolbar } from "./NodeToolbar";
-
-const getDeadlineLabel = (deadline?: string) => {
-  if (!deadline || deadline === "No deadline") return "ยังไม่มีกำหนด";
-  try {
-    const date = parseISO(deadline);
-    const today = startOfDay(new Date());
-    if (isToday(date)) return "วันนี้";
-    if (isTomorrow(date)) return "พรุ่งนี้";
-    if (isBefore(date, today)) return "เลยกำหนดแล้ว!";
-    return format(date, "d MMM");
-  } catch {
-    return "ยังไม่มีกำหนด";
-  }
-};
-
-const getDeadlineStyles = (deadline?: string) => {
-  if (!deadline || deadline === "No deadline") 
-    return "text-muted-foreground/40 hover:text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5";
-  
-  try {
-    const date = parseISO(deadline);
-    const today = startOfDay(new Date());
-    
-    if (isBefore(date, today)) {
-       return "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20";
-    }
-    if (isToday(date)) {
-       return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800 hover:bg-amber-200 dark:hover:bg-amber-900/40";
-    }
-    if (isTomorrow(date)) {
-       return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-900/40";
-    }
-    return "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/50 dark:text-zinc-400 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800";
-  } catch {
-    return "text-muted-foreground/40 hover:text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5";
-  }
-};
 
 const StatusIcon = ({
   status,
@@ -136,14 +103,17 @@ export const TaskNode = memo(
     const allEdges = useTaskStore((s) => s.edges);
     const focusRootId = useTaskStore((s) => s.focusRootId);
     const pushFocusRootId = useTaskStore((s) => s.pushFocusRootId);
-    const updateNodeDeadline = useTaskStore((s) => s.updateNodeDeadline);
-    const updateNodeImportance = useTaskStore((s) => s.updateNodeImportance);
-    
+    const updateNodeData = useTaskStore((s) => s.updateNodeData);
+    const deleteNode = useTaskStore((s) => s.deleteNode);
+    const addChild = useTaskStore((s) => s.addChild);
+    const toggleNodeCollapse = useTaskStore((s) => s.toggleNodeCollapse);
+    const toggleNodePin = useTaskStore((s) => s.toggleNodePin);
+
     // Check if ANY node is dragging to disable expensive filters globally for 60fps
-    const isAnyDragging = useStore((s) => 
-      Array.from(s.nodeInternals.values()).some(n => n.dragging)
+    const isAnyDragging = useStore((s) =>
+      Array.from(s.nodeInternals.values()).some((n) => n.dragging),
     );
-    
+
     const updateNodeInternals = useUpdateNodeInternals();
 
     const isConnecting = useStore((s) => !!s.connectionNodeId);
@@ -153,7 +123,8 @@ export const TaskNode = memo(
     const isVeryZoomedOut = zoom < 0.4;
 
     const { isMobile } = useDeviceSpec();
-    const { setInteractionState, setSelectedNodeId: setMobileSelectedNodeId } = useMobileUIStore();
+    const { setInteractionState, setSelectedNodeId: setMobileSelectedNodeId } =
+      useMobileUIStore();
 
     const isDimmed = editingNodeId !== null && editingNodeId !== id;
     const isDone = data.status === "done";
@@ -167,7 +138,11 @@ export const TaskNode = memo(
 
     // Calculate child count for collapse indicator
     const childrenCount = useMemo(() => {
-      return allEdges.filter((e) => e.source === id && (e.data?.type === "hierarchy" || e.data?.type === "related")).length;
+      return allEdges.filter(
+        (e) =>
+          e.source === id &&
+          (e.data?.type === "hierarchy" || e.data?.type === "related"),
+      ).length;
     }, [allEdges, id]);
 
     const descendantCount = useMemo(() => {
@@ -253,14 +228,12 @@ export const TaskNode = memo(
       setIsEditing(false);
       setEditingNodeId(null);
       if (isMobile) setInteractionState("node-selected");
-      
+
       const trimmedTitle = title.trim();
       if (trimmedTitle !== "" && trimmedTitle !== data.title) {
-        data.onTitleChange?.(id, trimmedTitle);
+        updateNodeData(id, { title: trimmedTitle });
       } else if (trimmedTitle === "" && data.title === "") {
-        // If it was a new node and title is still empty, maybe we should delete it?
-        // For now, let's just set a placeholder or keep it empty
-        data.onTitleChange?.(id, "Untitled");
+        updateNodeData(id, { title: "Untitled" });
       } else {
         setTitle(data.title);
       }
@@ -284,12 +257,12 @@ export const TaskNode = memo(
       const statuses: TaskStatus[] = ["todo", "in-progress", "done"];
       const currentIndex = statuses.indexOf(data.status);
       const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-      data.onStatusChange?.(id, nextStatus);
+      updateNodeData(id, { status: nextStatus });
     };
 
     const handleToggleCollapse = (e: React.MouseEvent) => {
       e.stopPropagation();
-      data.onToggleCollapse?.(id);
+      toggleNodeCollapse(id);
     };
 
     const renderContent = () => {
@@ -301,10 +274,12 @@ export const TaskNode = memo(
               "w-full h-full min-h-[32px] min-w-[32px] rounded-lg border-2 transition-all duration-300 shadow-sm",
               nodeColor === "default"
                 ? registryEntry.className
-                : nodeType === "root" 
-                  ? ROOT_COLOR_OVERRIDES[nodeColor as Exclude<TaskColor, "default">]
+                : nodeType === "root"
+                  ? ROOT_COLOR_OVERRIDES[
+                      nodeColor as Exclude<TaskColor, "default">
+                    ]
                   : COLOR_OVERRIDES[nodeColor as Exclude<TaskColor, "default">],
-              selected && "ring-4 ring-primary/30 border-primary"
+              selected && "ring-4 ring-primary/30 border-primary",
             )}
           />
         );
@@ -357,11 +332,17 @@ export const TaskNode = memo(
                   rows={1}
                 />
               ) : (
-                <span className={cn(
-                  "tracking-tight cursor-default select-none whitespace-pre-wrap break-words w-full transition-all duration-300",
-                  depth === 0 ? "text-xl font-black" : depth === 1 ? "text-lg font-extrabold" : "text-base font-bold",
-                  isDone && "text-white/60"
-                )}>
+                <span
+                  className={cn(
+                    "tracking-tight cursor-default select-none whitespace-pre-wrap break-words w-full transition-all duration-300",
+                    depth === 0
+                      ? "text-xl font-black"
+                      : depth === 1
+                        ? "text-lg font-extrabold"
+                        : "text-base font-bold",
+                    isDone && "text-white/60",
+                  )}
+                >
                   {data.title || "เริ่มตรงนี้!"}
                 </span>
               )}
@@ -382,7 +363,8 @@ export const TaskNode = memo(
               ? "border-primary ring-4 ring-primary/10 scale-105 z-10"
               : "border-transparent",
             nodeType === "idea" && "border-dashed",
-            isImportant && "shadow-[0_0_20px_rgba(251,191,36,0.3)] border-amber-400/50",
+            isImportant &&
+              "shadow-[0_0_20px_rgba(251,191,36,0.3)] border-amber-400/50",
           )}
           onDoubleClick={handleStartEditing}
         >
@@ -412,7 +394,12 @@ export const TaskNode = memo(
                       ),
                 )}
               >
-                <Icon className={cn("h-4 w-4", isImportant && "text-amber-500 animate-pulse")} />
+                <Icon
+                  className={cn(
+                    "h-4 w-4",
+                    isImportant && "text-amber-500 animate-pulse",
+                  )}
+                />
               </div>
             )}
 
@@ -439,10 +426,15 @@ export const TaskNode = memo(
                 <div
                   className={cn(
                     "whitespace-pre-wrap break-words w-full cursor-text py-0.5 leading-relaxed transition-all duration-300",
-                    depth === 1 ? "text-base font-bold" : "text-sm font-semibold",
-                    isDone && !isMid && "text-muted-foreground/40 line-through grayscale",
+                    depth === 1
+                      ? "text-base font-bold"
+                      : "text-sm font-semibold",
+                    isDone &&
+                      !isMid &&
+                      "text-muted-foreground/40 line-through grayscale",
                     !data.title && "text-muted-foreground/30",
-                    isImportant && "text-amber-900 dark:text-amber-100 font-bold",
+                    isImportant &&
+                      "text-amber-900 dark:text-amber-100 font-bold",
                   )}
                 >
                   {data.title || "New Node"}
@@ -478,14 +470,14 @@ export const TaskNode = memo(
                   onPointerDown={(e) => e.stopPropagation()}
                   className={cn(
                     "px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 border transition-all active:scale-95 group/deadline relative overflow-hidden",
-                    getDeadlineStyles(deadline)
+                    getDeadlineStyles(deadline),
                   )}
                 >
                   <CalendarIcon className="h-2.5 w-2.5" />
                   <span>{getDeadlineLabel(deadline)}</span>
                 </PopoverTrigger>
-                <PopoverContent 
-                  className="w-auto p-0 border-none shadow-2xl" 
+                <PopoverContent
+                  className="w-auto p-0 border-none shadow-2xl"
                   align="start"
                   onClick={(e) => e.stopPropagation()}
                   onPointerDown={(e) => e.stopPropagation()}
@@ -493,10 +485,16 @@ export const TaskNode = memo(
                   <div className="flex flex-col">
                     <Calendar
                       mode="single"
-                      selected={deadline && deadline !== "No deadline" ? parseISO(deadline) : undefined}
+                      selected={
+                        deadline && deadline !== "No deadline"
+                          ? parseISO(deadline)
+                          : undefined
+                      }
                       onSelect={(date) => {
                         if (date) {
-                          data.onDeadlineChange?.(id, format(date, "yyyy-MM-dd"));
+                          updateNodeData(id, {
+                            deadline: format(date, "yyyy-MM-dd"),
+                          });
                         }
                       }}
                     />
@@ -506,7 +504,7 @@ export const TaskNode = memo(
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            data.onDeadlineChange?.(id, "No deadline");
+                            updateNodeData(id, { deadline: "No deadline" });
                           }}
                           className="w-full py-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10 rounded-md transition-colors"
                         >
@@ -532,8 +530,10 @@ export const TaskNode = memo(
         className={cn(
           "group relative transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
           // PERFORMANCE: Disable expensive filters during ANY drag to maintain 60fps
-          isDimmed 
-            ? (isMobile || isAnyDragging ? "opacity-20 grayscale-[0.8]" : "opacity-20 blur-[2px]") 
+          isDimmed
+            ? isMobile || isAnyDragging
+              ? "opacity-20 grayscale-[0.8]"
+              : "opacity-20 blur-[2px]"
             : "opacity-100 blur-0",
           isDone && !selected && "opacity-60 grayscale-[0.4]",
           isMobile && "transition-opacity duration-200",
@@ -542,21 +542,23 @@ export const TaskNode = memo(
       >
         {/* Premium "Important" Aura (Reference-matched Flame) */}
         {isImportant && !isVeryZoomedOut && (
-          <div className={cn(
-            "absolute inset-0 -z-10 pointer-events-none transition-all duration-1000 ease-in-out",
-            isVeryZoomedOut ? "opacity-0 scale-90" : "opacity-100 scale-100"
-          )}>
+          <div
+            className={cn(
+              "absolute inset-0 -z-10 pointer-events-none transition-all duration-1000 ease-in-out",
+              isVeryZoomedOut ? "opacity-0 scale-90" : "opacity-100 scale-100",
+            )}
+          >
             {/* Primary Intense Glow (The Core) */}
             <div className="absolute inset-[-4px] rounded-[1.4rem] bg-orange-500/40 blur-xl motion-safe:animate-aura-float" />
-            
+
             {/* Vibrant Outer Ring (Flame Licks) */}
             {!isMid && (
               <>
                 <div className="absolute inset-[-12px] rounded-[2rem] bg-amber-400/30 blur-2xl motion-safe:animate-aura-float [animation-delay:-1s]" />
-                
+
                 {/* Wavy Flame Top Effect */}
                 <div className="absolute inset-x-4 -top-16 h-32 bg-gradient-to-t from-orange-500/40 via-amber-400/20 to-transparent blur-3xl motion-safe:animate-flame-flicker" />
-                
+
                 {/* Secondary Flicker Layer */}
                 <div className="absolute inset-x-8 -top-12 h-24 bg-gradient-to-t from-yellow-400/30 via-amber-300/10 to-transparent blur-2xl motion-safe:animate-flame-flicker [animation-delay:-1.5s]" />
               </>
@@ -577,13 +579,15 @@ export const TaskNode = memo(
                 isPinned={data.isPinned}
                 isImportant={isImportant}
                 deadline={deadline}
-                onAddChild={() => data.onAddChild?.(id)}
-                onDelete={() => data.onDelete?.(id)}
-                onTypeChange={(t) => data.onTypeChange?.(id, t)}
-                onColorChange={(c) => data.onColorChange?.(id, c)}
-                onTogglePin={() => data.onTogglePin?.(id)}
-                onToggleImportance={(imp) => updateNodeImportance(id, imp)}
-                onDeadlineChange={(dl) => updateNodeDeadline(id, dl)}
+                onAddChild={() => addChild(id)}
+                onDelete={() => deleteNode(id)}
+                onTypeChange={(t) => updateNodeData(id, { type: t })}
+                onColorChange={(c) => updateNodeData(id, { color: c })}
+                onTogglePin={() => toggleNodePin(id)}
+                onToggleImportance={(imp) =>
+                  updateNodeData(id, { isImportant: imp })
+                }
+                onDeadlineChange={(dl) => updateNodeData(id, { deadline: dl })}
                 isRoot={id === "root"}
               />
             </div>
@@ -621,8 +625,9 @@ export const TaskNode = memo(
                   ? Position.Left
                   : Position.Right;
 
-          const isVisible = (isHovered || selected) && !isVeryZoomedOut && !isEditing;
-          
+          const isVisible =
+            (isHovered || selected) && !isVeryZoomedOut && !isEditing;
+
           // Position handles exactly at the center of each side
           const handleBaseStyle: React.CSSProperties = {
             width: "12px",
@@ -643,7 +648,7 @@ export const TaskNode = memo(
                 position={position}
                 id={`${pos}-target`}
                 className="!bg-primary hover:!scale-125 !transition-transform"
-                style={{ 
+                style={{
                   ...handleBaseStyle,
                   pointerEvents: isEditing ? "none" : "all",
                 }}
@@ -653,7 +658,7 @@ export const TaskNode = memo(
                 position={position}
                 id={`${pos}-source`}
                 className="!bg-primary hover:!scale-125 !transition-transform"
-                style={{ 
+                style={{
                   ...handleBaseStyle,
                   pointerEvents: isConnecting || isEditing ? "none" : "all",
                 }}

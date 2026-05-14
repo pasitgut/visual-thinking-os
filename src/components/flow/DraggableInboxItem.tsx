@@ -2,7 +2,7 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface DraggableInboxItemProps {
   id: string;
@@ -10,14 +10,19 @@ interface DraggableInboxItemProps {
   children: ReactNode;
 }
 
-export const DraggableInboxItem = ({ id, text, children }: DraggableInboxItemProps) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: id,
-    data: {
-      type: "inbox-item",
-      text: text,
-    },
-  });
+export const DraggableInboxItem = ({
+  id,
+  text,
+  children,
+}: DraggableInboxItemProps) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: id,
+      data: {
+        type: "inbox-item",
+        text: text,
+      },
+    });
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -27,7 +32,13 @@ export const DraggableInboxItem = ({ id, text, children }: DraggableInboxItemPro
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="touch-none">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="touch-none"
+    >
       {children}
     </div>
   );

@@ -33,7 +33,7 @@ export const useLongPress = ({
         isLongPressTriggered.current = true;
       }, threshold);
     },
-    [onLongPress, threshold]
+    [onLongPress, threshold],
   );
 
   const cancel = useCallback(
@@ -46,12 +46,17 @@ export const useLongPress = ({
       if (!isLongPressTriggered.current && onClick) {
         // Simple heuristic: if we moved very little, it's a click
         if (startPosRef.current) {
-          const x = "touches" in event ? event.changedTouches[0].clientX : event.clientX;
-          const y = "touches" in event ? event.changedTouches[0].clientY : event.clientY;
-          
+          const x =
+            "touches" in event
+              ? event.changedTouches[0].clientX
+              : event.clientX;
+          const y =
+            "touches" in event
+              ? event.changedTouches[0].clientY
+              : event.clientY;
+
           const dist = Math.sqrt(
-            Math.pow(x - startPosRef.current.x, 2) + 
-            Math.pow(y - startPosRef.current.y, 2)
+            (x - startPosRef.current.x) ** 2 + (y - startPosRef.current.y) ** 2,
           );
 
           if (dist < moveThreshold) {
@@ -62,7 +67,7 @@ export const useLongPress = ({
 
       startPosRef.current = null;
     },
-    [onClick, moveThreshold]
+    [onClick, moveThreshold],
   );
 
   const move = useCallback(
@@ -72,8 +77,7 @@ export const useLongPress = ({
         const y = "touches" in event ? event.touches[0].clientY : event.clientY;
 
         const dist = Math.sqrt(
-          Math.pow(x - startPosRef.current.x, 2) + 
-          Math.pow(y - startPosRef.current.y, 2)
+          (x - startPosRef.current.x) ** 2 + (y - startPosRef.current.y) ** 2,
         );
 
         if (dist > moveThreshold) {
@@ -82,7 +86,7 @@ export const useLongPress = ({
         }
       }
     },
-    [moveThreshold]
+    [moveThreshold],
   );
 
   return {

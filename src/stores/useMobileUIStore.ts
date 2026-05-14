@@ -23,7 +23,7 @@ interface MobileUIState {
   setInteractionState: (state: MobileInteractionState) => void;
   setBottomSheetOpen: (isOpen: boolean) => void;
   setQuickCaptureOpen: (isOpen: boolean) => void;
-  
+
   // Helpers
   resetMobileUI: () => void;
 }
@@ -37,17 +37,18 @@ export const useMobileUIStore = create<MobileUIState>((set) => ({
 
   // Actions
   setSelectedNodeId: (id) => set({ selectedNodeId: id }),
-  
+
   setInteractionState: (state) => set({ interactionState: state }),
-  
+
   setBottomSheetOpen: (isOpen) => set({ isBottomSheetOpen: isOpen }),
-  
+
   setQuickCaptureOpen: (isOpen) => set({ isQuickCaptureOpen: isOpen }),
 
-  resetMobileUI: () => set({
-    selectedNodeId: null,
-    interactionState: "idle",
-    isBottomSheetOpen: false,
-    isQuickCaptureOpen: false,
-  }),
+  resetMobileUI: () =>
+    set({
+      selectedNodeId: null,
+      interactionState: "idle",
+      isBottomSheetOpen: false,
+      isQuickCaptureOpen: false,
+    }),
 }));

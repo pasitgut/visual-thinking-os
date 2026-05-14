@@ -6,8 +6,8 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useInboxStore } from "@/stores/useInboxStore";
-import { useTaskStore } from "@/stores/useTaskStore";
 import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { useTaskStore } from "@/stores/useTaskStore";
 import { DraggableInboxItem } from "./DraggableInboxItem";
 
 interface InboxPanelProps {
@@ -18,10 +18,8 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
   const { items, isOpen, setOpen, removeItem, loadInbox, isLoading } =
     useInboxStore();
 
-  const { addTask, addChild, selectedNodeIds, updateNodeTitle } =
+  const { addTask, addChild, selectedNodeIds } =
     useTaskStore();
-
-  const { setQuickCaptureOpen } = useMobileUIStore();
 
   useEffect(() => {
     const userId = (window as unknown as { userId: string }).userId;
@@ -33,15 +31,9 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
   const handleProcessItem = async (id: string, text: string) => {
     // Process: Convert to node
     if (selectedNodeIds.length === 1) {
-      addChild(selectedNodeIds[0], "idea");
-      const state = useTaskStore.getState();
-      const lastNode = state.nodes[state.nodes.length - 1];
-      updateNodeTitle(lastNode.id, text);
+      addChild(selectedNodeIds[0], { type: "idea", title: text });
     } else {
-      addTask("todo", "idea");
-      const state = useTaskStore.getState();
-      const lastNode = state.nodes[state.nodes.length - 1];
-      updateNodeTitle(lastNode.id, text);
+      addTask({ status: "todo", type: "idea", title: text });
     }
 
     // Remove from inbox after processing
@@ -54,7 +46,9 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
     <div
       className={cn(
         "bg-background flex flex-col transition-all duration-300 ease-in-out",
-        isDrawer ? "fixed top-0 left-0 h-screen w-full sm:w-[380px] border-r z-[150] shadow-2xl transform" : "h-full w-full",
+        isDrawer
+          ? "fixed top-0 left-0 h-screen w-full sm:w-[380px] border-r z-[150] shadow-2xl transform"
+          : "h-full w-full",
         isDrawer && (isOpen ? "translate-x-0" : "-translate-x-full"),
       )}
     >
@@ -71,10 +65,10 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
               ไอเดียที่จดไว้
             </p>
-            </div>
-            </div>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           {isDrawer && (
             <Button
               variant="ghost"
@@ -87,7 +81,6 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
           )}
         </div>
       </div>
-
 
       {/* Item List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
@@ -112,9 +105,7 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
         ) : (
           items.map((item) => (
             <DraggableInboxItem key={item.id} id={item.id} text={item.text}>
-              <div
-                className="group bg-card border border-border/50 rounded-xl p-4 hover:border-primary/30 hover:shadow-md transition-all animate-in fade-in slide-in-from-left-2 duration-300"
-              >
+              <div className="group bg-card border border-border/50 rounded-xl p-4 hover:border-primary/30 hover:shadow-md transition-all animate-in fade-in slide-in-from-left-2 duration-300">
                 <div className="flex flex-col gap-3">
                   <p className="text-sm font-medium leading-relaxed">
                     {item.text}

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 import {
   Drawer,
   DrawerContent,
@@ -55,7 +55,9 @@ export const BottomSheetContainer = ({
         <div className="mx-auto w-full max-w-lg">
           {(title || description) && (
             <DrawerHeader className="text-left border-b pb-4 mb-2">
-              {title && <DrawerTitle className="text-lg font-bold">{title}</DrawerTitle>}
+              {title && (
+                <DrawerTitle className="text-lg font-bold">{title}</DrawerTitle>
+              )}
               {description && (
                 <DrawerDescription className="text-sm text-muted-foreground">
                   {description}
@@ -63,11 +65,11 @@ export const BottomSheetContainer = ({
               )}
             </DrawerHeader>
           )}
-          
+
           <div className="px-4 py-2 overflow-y-auto max-h-[70vh]">
             {children}
           </div>
-          
+
           {/* Bottom padding for safe area / thumb clearance */}
           <div className="h-8" />
         </div>

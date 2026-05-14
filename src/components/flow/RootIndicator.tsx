@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export const RootIndicator = () => {
   const [isVisible, setIsVisible] = useState(false);
   const { setCenter, getNodes } = useReactFlow();
-  
+
   // Track viewport transform to determine if root is visible
   const transform = useStore((s) => s.transform);
   const width = useStore((s) => s.width);
@@ -26,10 +26,10 @@ export const RootIndicator = () => {
 
     // Check if root is within viewport bounds (with some margin)
     const margin = 100;
-    const isOffScreen = 
-      screenX < -margin || 
-      screenX > width + margin || 
-      screenY < -margin || 
+    const isOffScreen =
+      screenX < -margin ||
+      screenX > width + margin ||
+      screenY < -margin ||
       screenY > height + margin;
 
     setIsVisible(isOffScreen);
@@ -38,7 +38,10 @@ export const RootIndicator = () => {
   const handleReturnHome = () => {
     const rootNode = getNodes().find((n) => n.id === "root");
     if (rootNode) {
-      setCenter(rootNode.position.x, rootNode.position.y, { duration: 800, zoom: 1 });
+      setCenter(rootNode.position.x, rootNode.position.y, {
+        duration: 800,
+        zoom: 1,
+      });
     }
   };
 

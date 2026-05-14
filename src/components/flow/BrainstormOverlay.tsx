@@ -58,20 +58,13 @@ export const BrainstormOverlay = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
+    const title = inputValue.trim();
+    if (!title) return;
 
     if (selectedNodeIds.length === 1) {
-      addChild(selectedNodeIds[0], "idea");
-      // Find the newly created node (it's the last one in nodes)
-      // and update its title immediately
-      const state = useTaskStore.getState();
-      const lastNode = state.nodes[state.nodes.length - 1];
-      state.updateNodeTitle(lastNode.id, inputValue.trim());
+      addChild(selectedNodeIds[0], { title, type: "idea" });
     } else {
-      addTask("todo", "idea");
-      const state = useTaskStore.getState();
-      const lastNode = state.nodes[state.nodes.length - 1];
-      state.updateNodeTitle(lastNode.id, inputValue.trim());
+      addTask({ title, type: "idea" });
     }
 
     setInputValue("");

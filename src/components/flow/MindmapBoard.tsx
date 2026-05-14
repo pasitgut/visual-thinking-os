@@ -12,34 +12,34 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-import { RelationshipEdge } from "@/components/flow/RelationshipEdge";
-import { TaskNode } from "@/components/nodes/TaskNode";
+import { useDroppable } from "@dnd-kit/core";
 import { v4 as uuidv4 } from "uuid";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { RelationshipEdge } from "@/components/flow/RelationshipEdge";
+import { BottomSheetContainer } from "@/components/mobile/BottomSheetContainer";
+import { MobileNodeActions } from "@/components/mobile/MobileNodeActions";
+import { TaskNode } from "@/components/nodes/TaskNode";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
-import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
-import { getVisibleNodeIdsByDepth } from "@/lib/reactflow/focusTraversal";
-import { useTaskStore } from "@/stores/useTaskStore";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import {
+  getSubtreeIds,
+  getVisibleNodeIdsByDepth,
+} from "@/lib/reactflow/graphUtils";
 import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { useTaskStore } from "@/stores/useTaskStore";
 import { BrainstormOverlay } from "./BrainstormOverlay";
 import { EmptyState } from "./EmptyState";
 import { FocusBreadcrumbs } from "./FocusBreadcrumbs";
 import { MobileToolbar } from "./MobileToolbar";
 import { ProductivityToolbar } from "./ProductivityToolbar";
-import { ShortcutLegend } from "./ShortcutLegend";
-import { SearchPalette } from "./SearchPalette";
 import { RootIndicator } from "./RootIndicator";
-import { QuickCaptureOverlay } from "./QuickCaptureOverlay";
-import { BottomSheetContainer } from "@/components/mobile/BottomSheetContainer";
-import { MobileNodeActions } from "@/components/mobile/MobileNodeActions";
-
-import { useDroppable } from "@dnd-kit/core";
+import { SearchPalette } from "./SearchPalette";
+import { ShortcutLegend } from "./ShortcutLegend";
 
 const BoardContent = () => {
   const { setNodeRef } = useDroppable({
     id: "react-flow-pane",
   });
-  
+
   const nodeTypes = useMemo(
     () => ({
       task: TaskNode,
@@ -66,7 +66,8 @@ const BoardContent = () => {
   const persistedViewport = useTaskStore((s) => s.viewport);
   const setPersistedViewport = useTaskStore((s) => s.setViewport);
 
-  const { fitView, setCenter, getViewport, setViewport, screenToFlowPosition } = useReactFlow();
+  const { fitView, setCenter, getViewport, setViewport, screenToFlowPosition } =
+    useReactFlow();
   const { isMobile, isTablet } = useDeviceSpec();
   const setInteractionState = useMobileUIStore((s) => s.setInteractionState);
   const setSelectedNodeId = useMobileUIStore((s) => s.setSelectedNodeId);
@@ -81,14 +82,16 @@ const BoardContent = () => {
   const onMoveEndInternal = (event: any, viewport: any) => {
     setPersistedViewport(viewport);
     if (isMobile) {
-      setInteractionState(useMobileUIStore.getState().selectedNodeId ? "node-selected" : "idle");
+      setInteractionState(
+        useMobileUIStore.getState().selectedNodeId ? "node-selected" : "idle",
+      );
     }
   };
 
   // 6. Drag Edge to Create Node
   const connectionNodeId = useRef<string | null>(null);
   const didConnect = useRef(false);
-  
+
   const onConnectStart = (_: any, { nodeId }: any) => {
     connectionNodeId.current = nodeId;
     didConnect.current = false;
@@ -101,9 +104,15 @@ const BoardContent = () => {
     }
 
     // Use document.elementFromPoint for accurate target detection (especially on touch)
-    const clientX = event.clientX ?? event.touches?.[0]?.clientX ?? event.changedTouches?.[0]?.clientX;
-    const clientY = event.clientY ?? event.touches?.[0]?.clientY ?? event.changedTouches?.[0]?.clientY;
-    
+    const clientX =
+      event.clientX ??
+      event.touches?.[0]?.clientX ??
+      event.changedTouches?.[0]?.clientX;
+    const clientY =
+      event.clientY ??
+      event.touches?.[0]?.clientY ??
+      event.changedTouches?.[0]?.clientY;
+
     if (clientX !== undefined && clientY !== undefined) {
       const element = document.elementFromPoint(clientX, clientY);
       const targetIsPane = element?.classList.contains("react-flow__pane");
@@ -124,7 +133,13 @@ const BoardContent = () => {
           y: position.y - 25,
         };
 
-        useTaskStore.getState().addChild(connectionNodeId.current, "idea", adjustedPosition);
+        useTaskStore
+          .getState()
+          .addChild(
+            connectionNodeId.current,
+            { type: "idea" },
+            adjustedPosition,
+          );
       }
     }
 
@@ -139,7 +154,7 @@ const BoardContent = () => {
   // 1.1 Viewport Clamping: Calculate bounds for translateExtent
   const translateExtent = useMemo(() => {
     if (nodes.length === 0) return undefined;
-    
+
     let minX = Number.POSITIVE_INFINITY;
     let minY = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
@@ -178,14 +193,18 @@ const BoardContent = () => {
 
   const visibleEdgesAfterCollapse = useMemo(() => {
     const nodeIds = new Set(visibleNodesAfterCollapse.map((n) => n.id));
-    return edges.filter(
-      (e) => nodeIds.has(e.source) && nodeIds.has(e.target),
-    );
+    return edges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
   }, [visibleNodesAfterCollapse, edges]);
 
   // Progressive Exploration Rendering Logic
   const explorationNodeIds = useMemo(() => {
-    return getVisibleNodeIdsByDepth(focusRootId, visibleNodesAfterCollapse, visibleEdgesAfterCollapse, "root", 2);
+    return getVisibleNodeIdsByDepth(
+      focusRootId,
+      visibleNodesAfterCollapse,
+      visibleEdgesAfterCollapse,
+      "root",
+      2,
+    );
   }, [focusRootId, visibleNodesAfterCollapse, visibleEdgesAfterCollapse]);
 
   // 2. Focus Mode Logic: Filter visible nodes and edges from the ALREADY cullled list
@@ -196,19 +215,33 @@ const BoardContent = () => {
 
   const displayNodes = useMemo(() => {
     // Combine Progressive Exploration (Hard Limit) with Focus Mode (Visual Filter)
-    const baseNodes = visibleNodesAfterCollapse.filter(n => explorationNodeIds.has(n.id));
-    
+    const baseNodes = visibleNodesAfterCollapse.filter((n) =>
+      explorationNodeIds.has(n.id),
+    );
+
     // Find parent of focusRootId to de-emphasize it
-    const parentEdge = edges.find(e => e.target === focusRootId && (e.data?.type === "hierarchy" || e.data?.type === "related"));
+    const parentEdge = edges.find(
+      (e) =>
+        e.target === focusRootId &&
+        (e.data?.type === "hierarchy" || e.data?.type === "related"),
+    );
     const parentId = parentEdge?.source;
 
     return baseNodes.map((node) => {
       const isVisible = focusNodeId ? visibleNodeIds?.has(node.id) : true;
       const isParent = node.id === parentId;
-      
-      const filterEffect = isMobile 
-        ? (isVisible ? (isParent ? "grayscale(1)" : "none") : "grayscale(1)") 
-        : (isVisible ? (isParent ? "blur(1px) grayscale(0.5)" : "none") : "blur(2px)");
+
+      const filterEffect = isMobile
+        ? isVisible
+          ? isParent
+            ? "grayscale(1)"
+            : "none"
+          : "grayscale(1)"
+        : isVisible
+          ? isParent
+            ? "blur(1px) grayscale(0.5)"
+            : "none"
+          : "blur(2px)";
 
       const opacity = isVisible ? (isParent ? 0.3 : 1) : 0.1;
 
@@ -220,32 +253,48 @@ const BoardContent = () => {
           opacity,
           filter: filterEffect,
           pointerEvents: isVisible && !isParent ? "all" : "none",
-          transition: isMobile 
-            ? "opacity 0.2s ease" 
+          transition: isMobile
+            ? "opacity 0.2s ease"
             : "opacity 0.4s ease, filter 0.4s ease",
         } as React.CSSProperties,
       };
     });
-  }, [visibleNodesAfterCollapse, explorationNodeIds, visibleNodeIds, focusNodeId, isMobile, edges, focusRootId]);
+  }, [
+    visibleNodesAfterCollapse,
+    explorationNodeIds,
+    visibleNodeIds,
+    focusNodeId,
+    isMobile,
+    edges,
+    focusRootId,
+  ]);
 
   const displayEdges = useMemo(() => {
     const baseEdges = visibleEdgesAfterCollapse.filter(
-      (e) => explorationNodeIds.has(e.source) && explorationNodeIds.has(e.target)
+      (e) =>
+        explorationNodeIds.has(e.source) && explorationNodeIds.has(e.target),
     );
-    
+
     if (editingNodeId) return [];
     if (!focusNodeId) return baseEdges;
-    
-    return baseEdges.filter((edge) => 
-      visibleNodeIds?.has(edge.source) && visibleNodeIds?.has(edge.target)
+
+    return baseEdges.filter(
+      (edge) =>
+        visibleNodeIds?.has(edge.source) && visibleNodeIds?.has(edge.target),
     );
-  }, [visibleEdgesAfterCollapse, explorationNodeIds, visibleNodeIds, focusNodeId, editingNodeId]);
+  }, [
+    visibleEdgesAfterCollapse,
+    explorationNodeIds,
+    visibleNodeIds,
+    focusNodeId,
+    editingNodeId,
+  ]);
 
   // Cinematic Transition Logic
   const lastFocusRootId = useRef(focusRootId);
   useEffect(() => {
     if (focusRootId !== lastFocusRootId.current) {
-      const targetNode = nodes.find(n => n.id === focusRootId);
+      const targetNode = nodes.find((n) => n.id === focusRootId);
       if (targetNode) {
         // Required animation sequence:
         // 1. slight zoom out
@@ -259,7 +308,7 @@ const BoardContent = () => {
         const performTransition = async () => {
           // 1. Slight zoom out
           const { x, y, zoom } = getViewport();
-          
+
           // 2 & 4. Smooth pan and center
           setCenter(targetNode.position.x + 100, targetNode.position.y, {
             zoom: zoom * 0.8, // Slight zoom out during pan
@@ -267,11 +316,16 @@ const BoardContent = () => {
           });
 
           // Wait for pan
-          await new Promise(r => setTimeout(r, 850));
+          await new Promise((r) => setTimeout(r, 850));
 
           // 5. Zoom inward
           fitView({
-            nodes: [{ id: focusRootId }, ...edges.filter(e => e.source === focusRootId).map(e => ({ id: e.target }))],
+            nodes: [
+              { id: focusRootId },
+              ...edges
+                .filter((e) => e.source === focusRootId)
+                .map((e) => ({ id: e.target })),
+            ],
             duration: 1000,
             padding: isMobile ? 0.4 : 0.2,
           });
@@ -290,9 +344,13 @@ const BoardContent = () => {
 
   // 1.3 Improve Focus Mode zoom behavior: Trigger fitView ONLY once on Focus activation
   const lastFittedFocusId = useRef<string | null>(null);
-  
+
   useEffect(() => {
-    if (focusNodeId && focusNodeId !== lastFittedFocusId.current && visibleNodeIds) {
+    if (
+      focusNodeId &&
+      focusNodeId !== lastFittedFocusId.current &&
+      visibleNodeIds
+    ) {
       lastFittedFocusId.current = focusNodeId;
       const timer = setTimeout(() => {
         fitView({
@@ -338,15 +396,15 @@ const BoardContent = () => {
   const prevNodesCount = useRef(nodes.length);
   useEffect(() => {
     if (nodes.length > prevNodesCount.current && editingNodeId) {
-      const newNode = nodes.find(n => n.id === editingNodeId);
+      const newNode = nodes.find((n) => n.id === editingNodeId);
       if (newNode) {
         const { x, y } = newNode.position;
         const { zoom } = getViewport();
-        
+
         // Center on the new node, slightly offset to account for toolbar
-        setCenter(x + 100, y + 25, { 
+        setCenter(x + 100, y + 25, {
           zoom: Math.max(zoom, 0.8), // Don't zoom out if already zoomed in, but ensure at least 0.8
-          duration: 800 
+          duration: 800,
         });
       }
     }
@@ -425,7 +483,6 @@ const BoardContent = () => {
       <SearchPalette />
       <RootIndicator />
       <BrainstormOverlay />
-      <QuickCaptureOverlay />
       <FocusBreadcrumbs />
       {isEmpty && <EmptyState />}
       <MobileToolbar />

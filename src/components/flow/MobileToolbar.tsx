@@ -1,12 +1,12 @@
 "use client";
 
-import { ZoomIn, ZoomOut, Search, Inbox, Zap, Maximize } from "lucide-react";
+import { Inbox, Maximize, Search, Zap, ZoomIn, ZoomOut } from "lucide-react";
 import { useReactFlow } from "reactflow";
 import { Button } from "@/components/ui/button";
-import { useTaskStore } from "@/stores/useTaskStore";
+import { cn } from "@/lib/utils";
 import { useInboxStore } from "@/stores/useInboxStore";
 import { useMobileUIStore } from "@/stores/useMobileUIStore";
-import { cn } from "@/lib/utils";
+import { useTaskStore } from "@/stores/useTaskStore";
 
 /**
  * Unified Mobile Floating Toolbar
@@ -25,14 +25,13 @@ export const MobileToolbar = () => {
 
   return (
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 sm:hidden flex items-center gap-1.5 p-1.5 bg-background/70 backdrop-blur-xl border shadow-2xl rounded-full transition-all duration-300">
-      
       {/* Search */}
       <Button
         variant="ghost"
         size="icon"
         className={cn(
           "h-12 w-12 rounded-full",
-          isSearchOpen && "bg-primary text-primary-foreground"
+          isSearchOpen && "bg-primary text-primary-foreground",
         )}
         onClick={() => setSearchOpen(!isSearchOpen)}
       >
@@ -75,7 +74,7 @@ export const MobileToolbar = () => {
         size="icon"
         className={cn(
           "h-12 w-12 rounded-full relative",
-          isInboxOpen && "bg-primary text-primary-foreground"
+          isInboxOpen && "bg-primary text-primary-foreground",
         )}
         onClick={() => setInboxOpen(!isInboxOpen)}
       >
@@ -83,7 +82,6 @@ export const MobileToolbar = () => {
         {/* ตัวอย่าง badge อนาคต */}
         <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border border-background hidden" />
       </Button>
-
     </div>
   );
 };

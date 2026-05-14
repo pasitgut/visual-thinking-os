@@ -10,16 +10,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useTaskStore } from "@/stores/useTaskStore";
 import { cn } from "@/lib/utils";
+import { useTaskStore } from "@/stores/useTaskStore";
 
 export const SearchPalette = () => {
-  const { 
-    isSearchOpen: isOpen, 
-    setSearchOpen: setIsOpen, 
-    nodes, 
+  const {
+    isSearchOpen: isOpen,
+    setSearchOpen: setIsOpen,
+    nodes,
     selectNode,
-    recentNodeIds
+    recentNodeIds,
   } = useTaskStore();
   const [query, setQuery] = useState("");
   const { setCenter } = useReactFlow();
@@ -36,9 +36,10 @@ export const SearchPalette = () => {
   }, [isOpen, setIsOpen]);
 
   const filteredNodes = nodes
-    .filter((node) => 
-      node.data.title.toLowerCase().includes(query.toLowerCase()) && 
-      node.data.title.trim() !== ""
+    .filter(
+      (node) =>
+        node.data.title.toLowerCase().includes(query.toLowerCase()) &&
+        node.data.title.trim() !== "",
     )
     .slice(0, 8);
 
@@ -128,10 +129,12 @@ export const SearchPalette = () => {
                 </button>
               ))}
             </>
-          ) : query !== "" && (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              หาไม่เจอแฮะ ลองพิมพ์ใหม่ดูมั้ย?
-            </div>
+          ) : (
+            query !== "" && (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                หาไม่เจอแฮะ ลองพิมพ์ใหม่ดูมั้ย?
+              </div>
+            )
           )}
 
           {query === "" && recentNodes.length === 0 && (

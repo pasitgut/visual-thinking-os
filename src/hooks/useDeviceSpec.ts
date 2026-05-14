@@ -18,12 +18,12 @@ export const useDeviceSpec = (): DeviceSpec => {
   useEffect(() => {
     const updateSpec = () => {
       const width = window.innerWidth;
-      const isTouch = 
-        "ontouchstart" in window || 
-        navigator.maxTouchPoints > 0;
-      
+      const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
       const isMobile = width < 768;
-      const isTablet = (width >= 768 && width < 1280) || (width >= 1280 && isTouch && width < 1440);
+      const isTablet =
+        (width >= 768 && width < 1280) ||
+        (width >= 1280 && isTouch && width < 1440);
       const isDesktop = width >= 1280 && !isTablet;
 
       setSpec({

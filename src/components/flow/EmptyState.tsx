@@ -5,7 +5,6 @@ import { useTaskStore } from "@/stores/useTaskStore";
 export const EmptyState = () => {
   const createRootTask = useTaskStore((state) => state.createRootTask);
 
-
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px] z-10 overflow-auto py-12">
       <div className="max-w-2xl w-full p-8 text-center space-y-10 animate-in fade-in zoom-in duration-500">

@@ -11,13 +11,11 @@ export default function OfflinePage() {
       </div>
       <h1 className="mb-2 text-2xl font-bold">You are offline</h1>
       <p className="mb-8 max-w-md text-muted-foreground">
-        It looks like you've lost your internet connection. Don't worry, your work is saved locally and will sync once you're back online.
+        It looks like you've lost your internet connection. Don't worry, your
+        work is saved locally and will sync once you're back online.
       </p>
       <div className="flex gap-4">
-        <Link 
-          href="/" 
-          className={cn(buttonVariants({ variant: "default" }))}
-        >
+        <Link href="/" className={cn(buttonVariants({ variant: "default" }))}>
           Try again
         </Link>
       </div>

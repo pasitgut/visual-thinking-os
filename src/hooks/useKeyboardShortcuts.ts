@@ -66,7 +66,7 @@ export const useKeyboardShortcuts = () => {
       if (event.altKey && event.key >= "1" && event.key <= "9") {
         event.preventDefault();
         const key = event.key;
-        
+
         if (modifierKey) {
           // Set Bookmark: Alt + Ctrl/Cmd + 1-9
           const { x, y, zoom } = getViewport();
@@ -77,7 +77,7 @@ export const useKeyboardShortcuts = () => {
           if (bookmark) {
             setViewport(
               { x: bookmark.x, y: bookmark.y, zoom: bookmark.zoom },
-              { duration: 800 }
+              { duration: 800 },
             );
           }
         }
@@ -87,8 +87,7 @@ export const useKeyboardShortcuts = () => {
       // Cmd/Ctrl + S -> Manual Save
       if (modifierKey && event.key === "s") {
         event.preventDefault();
-        const userId = (window as any).userId;
-        if (userId) saveToFirestore(userId);
+        saveToFirestore();
         return;
       }
 
@@ -100,9 +99,9 @@ export const useKeyboardShortcuts = () => {
         // Tab -> Create Child
         if (event.key === "Tab" && !event.shiftKey) {
           event.preventDefault();
-          const parentNode = nodes.find(n => n.id === selectedId);
+          const parentNode = nodes.find((n) => n.id === selectedId);
           addChild(selectedId);
-          
+
           setTimeout(() => {
             const state = useTaskStore.getState();
             const newNodeId = state.selectedNodeIds[0];
@@ -128,7 +127,7 @@ export const useKeyboardShortcuts = () => {
           } else {
             addSibling(selectedId);
           }
-          
+
           setTimeout(() => {
             const state = useTaskStore.getState();
             const newNodeId = state.selectedNodeIds[0];
@@ -201,7 +200,9 @@ export const useKeyboardShortcuts = () => {
                 targetId = siblings[(currentIndex + 1) % siblings.length];
               } else {
                 targetId =
-                  siblings[(currentIndex - 1 + siblings.length) % siblings.length];
+                  siblings[
+                    (currentIndex - 1 + siblings.length) % siblings.length
+                  ];
               }
             }
           }

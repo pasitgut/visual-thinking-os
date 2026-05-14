@@ -2,21 +2,21 @@
 
 import { ChevronLeft, ChevronRight, Home, Layers } from "lucide-react";
 import React, { useMemo } from "react";
-import { getParentPath } from "@/lib/reactflow/focusUtils";
+import { getParentPath } from "@/lib/reactflow/graphUtils";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/useTaskStore";
 import type { TaskNodeData } from "@/types/task";
 
 export const FocusBreadcrumbs = () => {
-  const { 
-    focusNodeId, 
-    setFocusNodeId, 
-    focusRootId, 
+  const {
+    focusNodeId,
+    setFocusNodeId,
+    focusRootId,
     setFocusRootId,
     popFocusRootId,
     navigationHistory,
-    nodes, 
-    edges 
+    nodes,
+    edges,
   } = useTaskStore();
 
   const explorationPath = useMemo(() => {
@@ -35,7 +35,9 @@ export const FocusBreadcrumbs = () => {
           onClick={() => setFocusRootId("root")}
           className={cn(
             "p-1.5 hover:bg-accent rounded-full transition-colors",
-            focusRootId === "root" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+            focusRootId === "root"
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground",
           )}
           title="Back to Global Root"
         >
@@ -80,11 +82,14 @@ export const FocusBreadcrumbs = () => {
       {focusNodeId && (
         <div className="flex items-center gap-2 px-3 py-1 bg-primary text-primary-foreground rounded-full shadow-md animate-in slide-in-from-top-2 duration-300 self-start pointer-events-auto">
           <Layers className="h-3 w-3 opacity-70" />
-          <span className="text-[10px] font-black uppercase tracking-widest">Focusing:</span>
-          <span className="text-[10px] font-medium truncate max-w-[100px]">
-            {(nodes.find(n => n.id === focusNodeId)?.data as TaskNodeData)?.title || "Selected Node"}
+          <span className="text-[10px] font-black uppercase tracking-widest">
+            Focusing:
           </span>
-          <button 
+          <span className="text-[10px] font-medium truncate max-w-[100px]">
+            {(nodes.find((n) => n.id === focusNodeId)?.data as TaskNodeData)
+              ?.title || "Selected Node"}
+          </span>
+          <button
             onClick={() => setFocusNodeId(null)}
             className="ml-1 p-0.5 hover:bg-white/20 rounded-full transition-colors"
           >

@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
 import { InboxService } from "@/services/inboxService";
 import type { InboxItem } from "@/types/task";
+import { useAuthStore } from "./useAuthStore";
 
 interface InboxState {
   items: InboxItem[];
@@ -27,12 +28,12 @@ export const useInboxStore = create<InboxState>((set, get) => ({
       set({ items, isLoading: false });
     } catch (error) {
       console.error("Failed to load inbox:", error);
-      set({ isLoading: false });
+      set({ items: [], isLoading: false });
     }
   },
 
   addItem: async (text: string) => {
-    const userId = (window as any).userId;
+    const userId = useAuthStore.getState().user?.uid;
     if (!userId) return;
 
     const newItem: InboxItem = {
@@ -46,7 +47,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
   },
 
   removeItem: async (id: string) => {
-    const userId = (window as any).userId;
+    const userId = useAuthStore.getState().user?.uid;
     if (!userId) return;
 
     const itemToRemove = get().items.find((i) => i.id === id);
