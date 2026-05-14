@@ -28,7 +28,7 @@ export const SyncStatus = () => {
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive/10 border border-destructive/20 animate-pulse">
         <CloudOff className="h-3.5 w-3.5 text-destructive" />
         <span className="text-[10px] font-bold uppercase tracking-widest text-destructive/80">
-          Offline Mode
+          เน็ตหลุดอยู่นะ
         </span>
       </div>
     );
@@ -40,7 +40,7 @@ export const SyncStatus = () => {
         <>
           <RefreshCw className="h-3.5 w-3.5 text-blue-500 animate-spin" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500/80">
-            Saving...
+            กำลังเซฟ...
           </span>
         </>
       )}
@@ -53,7 +53,7 @@ export const SyncStatus = () => {
             </div>
           </div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80">
-            Synced
+            เซฟเรียบร้อย
           </span>
         </>
       )}
@@ -62,7 +62,7 @@ export const SyncStatus = () => {
           <div className="flex items-center gap-1.5">
             <AlertCircle className="h-3.5 w-3.5 text-destructive" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-destructive/80">
-              Sync Error
+              เซฟไม่ติดแฮะ
             </span>
           </div>
           <button
@@ -71,7 +71,7 @@ export const SyncStatus = () => {
             title="Retry Sync"
           >
             <RefreshCw className="h-3 w-3 group-hover:rotate-180 transition-transform duration-500" />
-            <span className="text-[9px] font-bold uppercase tracking-tighter">Retry</span>
+            <span className="text-[9px] font-bold uppercase tracking-tighter">ลองใหม่</span>
           </button>
         </div>
       )}

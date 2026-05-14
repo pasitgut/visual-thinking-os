@@ -83,14 +83,14 @@ export const BrainstormOverlay = () => {
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-primary text-primary-foreground rounded-full shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
         <Zap className="h-4 w-4 animate-pulse fill-current" />
         <span className="text-xs font-bold uppercase tracking-widest">
-          Brainstorm Mode Active
+          กำลังระดมสมอง...
         </span>
         <div className="h-4 w-[1px] bg-primary-foreground/20 mx-1" />
         <div className="flex items-center gap-1.5 opacity-80">
           <kbd className="px-1.5 py-0.5 rounded bg-primary-foreground/10 text-[10px] font-mono">
             SPACE
           </kbd>
-          <span className="text-[10px]">to capture</span>
+          <span className="text-[10px]">เพื่อจดไอเดีย</span>
         </div>
         <button
           type="button"
@@ -121,8 +121,8 @@ export const BrainstormOverlay = () => {
                 className="flex-1 bg-transparent border-none p-4 text-xl font-medium focus:ring-0 outline-none"
                 placeholder={
                   selectedNodeIds.length === 1
-                    ? "Add sub-idea..."
-                    : "Capture new idea..."
+                    ? "เพิ่มไอเดียย่อย..."
+                    : "มีไอเดียอะไรมั้ย..."
                 }
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -136,7 +136,7 @@ export const BrainstormOverlay = () => {
                   <ArrowRight className="h-3 w-3" />
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Enter to save
+                  กด Enter เพื่อเซฟ
                 </span>
               </div>
             </form>

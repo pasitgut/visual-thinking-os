@@ -89,10 +89,10 @@ export const QuickCaptureOverlay = () => {
             </div>
             <div>
               <h2 className="text-sm font-bold uppercase tracking-widest text-foreground/80">
-                Quick Capture
+                จดด่วน
               </h2>
               <p className="text-[10px] text-muted-foreground uppercase font-medium">
-                Sent to Inbox
+                ส่งไปเก็บใน Inbox
               </p>
             </div>
           </div>
@@ -114,7 +114,7 @@ export const QuickCaptureOverlay = () => {
                 "w-full bg-transparent border-none focus:ring-0 outline-none placeholder:text-muted-foreground/30 font-light tracking-tight transition-all",
                 isMobile ? "text-3xl" : "text-4xl"
               )}
-              placeholder="What's the idea?"
+              placeholder="มีไอเดียอะไรมั้ย? พิมพ์เลย..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               autoComplete="off"
@@ -135,13 +135,13 @@ export const QuickCaptureOverlay = () => {
                   <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-[10px] font-mono border border-foreground/10">
                     ESC
                   </kbd>
-                  <span className="text-[10px] uppercase font-bold">Cancel</span>
+                  <span className="text-[10px] uppercase font-bold">ยกเลิก</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-[10px] font-mono border border-foreground/10">
                     ENTER
                   </kbd>
-                  <span className="text-[10px] uppercase font-bold">Save</span>
+                  <span className="text-[10px] uppercase font-bold">บันทึก</span>
                 </div>
               </div>
             )}
@@ -149,7 +149,7 @@ export const QuickCaptureOverlay = () => {
             {isMobile && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Inbox className="h-4 w-4" />
-                <span className="text-xs font-medium italic">Saving to Inbox...</span>
+                <span className="text-xs font-medium italic">กำลังเซฟลง Inbox...</span>
               </div>
             )}
 
@@ -162,7 +162,7 @@ export const QuickCaptureOverlay = () => {
                 "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/40"
               )}
             >
-              <span className="text-sm">Capture</span>
+              <span className="text-sm">จดเลย!</span>
               <div className="p-1 bg-white/20 rounded-md group-hover:translate-x-1 transition-transform">
                 <ArrowRight className="h-4 w-4" />
               </div>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useTaskStore } from "@/stores/useTaskStore";
+import { cn } from "@/lib/utils";
 
 export const SearchPalette = () => {
   const { 
@@ -62,7 +63,7 @@ export const SearchPalette = () => {
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search nodes..."
+              placeholder="อยากหาโหนดไหน? พิมพ์เลย..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="border-none focus-visible:ring-0 bg-transparent h-8 p-0"
@@ -75,7 +76,7 @@ export const SearchPalette = () => {
             <div className="mb-4">
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Clock className="h-3 w-3" />
-                Recent
+                ที่เพิ่งเปิดดู
               </div>
               {recentNodes.map((node) => (
                 <button
@@ -101,7 +102,7 @@ export const SearchPalette = () => {
             <>
               {query !== "" && (
                 <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Results
+                  เจอแล้ว
                 </div>
               )}
               {filteredNodes.map((node) => (
@@ -129,13 +130,13 @@ export const SearchPalette = () => {
             </>
           ) : query !== "" && (
             <div className="p-4 text-center text-sm text-muted-foreground">
-              No results found
+              หาไม่เจอแฮะ ลองพิมพ์ใหม่ดูมั้ย?
             </div>
           )}
 
           {query === "" && recentNodes.length === 0 && (
             <div className="p-4 text-center text-sm text-muted-foreground">
-              Start typing to search...
+              พิมพ์เพื่อค้นหาโหนดนะ...
             </div>
           )}
         </div>
