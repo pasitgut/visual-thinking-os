@@ -525,6 +525,7 @@ Product ต้อง optimize สำหรับ:
 * Keyboard Navigation
 * Zoom to Node
 * Search to Focus
+* **Focus-First Progressive Exploration**: A cinematic navigation system that only renders 2 levels of depth from the current focus root, allowing for calm and intentional discovery of large mindmaps.
 
 ### Layout
 

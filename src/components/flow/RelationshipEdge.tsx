@@ -25,7 +25,7 @@ const RELATIONSHIP_CONFIG: Record<
   { label: string; color: string; dashArray?: string; icon: string }
 > = {
   hierarchy: { label: "Subtask", color: "#cbd5e1", icon: "📁" },
-  related_to: {
+  related: {
     label: "Related",
     color: "#94a3b8",
     dashArray: "5 5",
@@ -67,7 +67,7 @@ export const RelationshipEdge = memo((props: EdgeProps<TaskEdgeData>) => {
     targetY,
     targetPosition,
   });
-  const relationshipType = data?.type || "hierarchy";
+  const relationshipType = data?.type || "related";
   const config =
     RELATIONSHIP_CONFIG[relationshipType as keyof typeof RELATIONSHIP_CONFIG];
 

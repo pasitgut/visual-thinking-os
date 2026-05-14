@@ -18,6 +18,7 @@ import { useDeviceSpec } from "@/hooks/useDeviceSpec";
 import { useMobileUIStore } from "@/stores/useMobileUIStore";
 import { useLongPress } from "@/hooks/useLongPress";
 import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
+import { isNodeAtDepthLimit } from "@/lib/reactflow/focusTraversal";
 import type {
   TaskColor,
   TaskNodeData,
@@ -85,10 +86,19 @@ export const TaskNode = memo(
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const setEditingNodeId = useTaskStore((state) => state.setEditingNodeId);
-    const editingNodeId = useTaskStore((state) => state.editingNodeId);
+    const { 
+      setEditingNodeId, 
+      editingNodeId, 
+      edges: allEdges, 
+      focusRootId, 
+      pushFocusRootId,
+      updateNodeDeadline,
+      updateNodeImportance,
+    } = useTaskStore();
+    
     const updateNodeInternals = useUpdateNodeInternals();
 
+    const isConnecting = useStore((s) => !!s.connectionNodeId);
     const zoom = useStore((s) => s.transform[2]);
     const isMacro = zoom < 0.3;
     const isMid = zoom < 0.6;
@@ -99,6 +109,8 @@ export const TaskNode = memo(
 
     const isDimmed = editingNodeId !== null && editingNodeId !== id;
     const isDone = data.status === "done";
+    const isImportant = data.isImportant;
+    const deadline = data.deadline;
     const depth = data.depth ?? 0;
     const nodeType = data.type || "child";
     const nodeColor = data.color || "default";
@@ -106,9 +118,8 @@ export const TaskNode = memo(
     const Icon = registryEntry.icon;
 
     // Calculate child count for collapse indicator
-    const allEdges = useTaskStore((s) => s.edges);
     const childrenCount = useMemo(() => {
-      return allEdges.filter((e) => e.source === id && e.data?.type === "hierarchy").length;
+      return allEdges.filter((e) => e.source === id && (e.data?.type === "hierarchy" || e.data?.type === "related")).length;
     }, [allEdges, id]);
 
     const descendantCount = useMemo(() => {
@@ -116,6 +127,16 @@ export const TaskNode = memo(
       const ids = getSubtreeIds(id, allEdges);
       return ids.size - 1; // Subtract self
     }, [id, allEdges, data.isCollapsed]);
+
+    // Progressive Exploration: Depth Limit Check
+    const atDepthLimit = useMemo(() => {
+      return isNodeAtDepthLimit(id, focusRootId, allEdges, 2);
+    }, [id, focusRootId, allEdges]);
+
+    const handleFocusHere = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      pushFocusRootId(id);
+    };
 
     // Sync handle positions when size changes automatically
     useEffect(() => {
@@ -137,21 +158,29 @@ export const TaskNode = memo(
     }, [data.title]);
 
     useEffect(() => {
-      if (isEditing && textareaRef.current) {
-        // Immediate focus attempt
-        textareaRef.current.focus();
-        textareaRef.current.select();
-
-        // Secondary attempt to handle potential rendering delays in PWA/Mobile
-        const timeoutId = setTimeout(() => {
+      if (isEditing) {
+        const focusInput = () => {
           if (textareaRef.current) {
             textareaRef.current.focus();
             textareaRef.current.select();
+            // Adjust height to content
             textareaRef.current.style.height = "auto";
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+            return true;
           }
-        }, 100); // Slightly increased for reliability
-        return () => clearTimeout(timeoutId);
+          return false;
+        };
+
+        // Try immediately
+        if (!focusInput()) {
+          // If not ready, retry with RAF and a short timeout
+          const rafId = requestAnimationFrame(() => focusInput());
+          const timeoutId = setTimeout(focusInput, 100);
+          return () => {
+            cancelAnimationFrame(rafId);
+            clearTimeout(timeoutId);
+          };
+        }
       }
     }, [isEditing]);
 
@@ -159,10 +188,11 @@ export const TaskNode = memo(
     useEffect(() => {
       if (editingNodeId === id && !isEditing) {
         setIsEditing(true);
+        if (isMobile) setInteractionState("editing-text");
       } else if (editingNodeId !== id && isEditing) {
         setIsEditing(false);
       }
-    }, [editingNodeId, id, isEditing]);
+    }, [editingNodeId, id, isEditing, isMobile, setInteractionState]);
 
     const handleStartEditing = () => {
       if (nodeType === "root") return;
@@ -296,7 +326,7 @@ export const TaskNode = memo(
       return (
         <div
           className={cn(
-            "w-full h-auto min-h-[48px] min-w-[160px] rounded-xl border-2 px-3 py-2.5 transition-all duration-300 flex items-center gap-3 shadow-md",
+            "w-full h-auto min-h-[48px] min-w-[160px] rounded-xl border-2 px-3 py-2.5 transition-all duration-300 flex flex-col gap-1 shadow-md",
             nodeColor === "default"
               ? registryEntry.className
               : COLOR_OVERRIDES[nodeColor as Exclude<TaskColor, "default">],
@@ -304,89 +334,109 @@ export const TaskNode = memo(
               ? "border-primary ring-4 ring-primary/10 scale-105 z-10"
               : "border-transparent",
             nodeType === "idea" && "border-dashed",
+            isImportant && "shadow-[0_0_20px_rgba(251,191,36,0.3)] border-amber-400/50",
           )}
           onDoubleClick={handleStartEditing}
         >
-          {!isMid && (
-            <div
-              className={cn(
-                "p-1.5 rounded-lg flex-shrink-0",
-                nodeColor !== "default"
-                  ? "bg-black/5 dark:bg-white/5"
-                  : cn(
-                      nodeType === "task" &&
-                        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                      nodeType === "problem" &&
-                        "bg-pink-500/10 text-pink-600 dark:text-pink-400",
-                      nodeType === "decision" &&
-                        "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-                      nodeType === "question" &&
-                        "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-                      nodeType === "reference" &&
-                        "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
-                      nodeType === "idea" &&
-                        "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-                      nodeType === "child" && "bg-zinc-500/10 text-zinc-500",
-                      nodeType === "parent" &&
-                        "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-                    ),
-              )}
-            >
-              <Icon className="h-4 w-4" />
-            </div>
-          )}
-
-          <div className="flex-1 flex items-center gap-2">
-            {!isMid && nodeType === "task" && (
-              <button
-                type="button"
-                onClick={handleStatusToggle}
-                className="hover:scale-110 active:scale-90 transition-transform flex-shrink-0"
-              >
-                <StatusIcon status={data.status} size="h-4 w-4" />
-              </button>
-            )}
-            {isEditing ? (
-              <textarea
-                {...commonTextareaProps}
-                className={cn(
-                  commonTextareaProps.className,
-                  "text-sm font-semibold",
-                )}
-                rows={1}
-              />
-            ) : (
+          <div className="flex items-center gap-3 w-full">
+            {!isMid && (
               <div
                 className={cn(
-                  "whitespace-pre-wrap break-words w-full cursor-text py-0.5 leading-relaxed transition-all duration-300",
-                  depth === 1 ? "text-base font-bold" : "text-sm font-semibold",
-                  isDone && !isMid && "text-muted-foreground/40 line-through grayscale",
-                  !data.title && "text-muted-foreground/30",
+                  "p-1.5 rounded-lg flex-shrink-0",
+                  nodeColor !== "default"
+                    ? "bg-black/5 dark:bg-white/5"
+                    : cn(
+                        nodeType === "task" &&
+                          "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                        nodeType === "problem" &&
+                          "bg-pink-500/10 text-pink-600 dark:text-pink-400",
+                        nodeType === "decision" &&
+                          "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+                        nodeType === "question" &&
+                          "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+                        nodeType === "reference" &&
+                          "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
+                        nodeType === "idea" &&
+                          "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                        nodeType === "child" && "bg-zinc-500/10 text-zinc-500",
+                        nodeType === "parent" &&
+                          "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+                      ),
                 )}
               >
-                {data.title || "New Node"}
+                <Icon className={cn("h-4 w-4", isImportant && "text-amber-500 animate-pulse")} />
               </div>
             )}
 
-            {childrenCount > 0 && !isMid && (
-              <button
-                type="button"
-                onClick={handleToggleCollapse}
-                className="ml-auto p-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-muted-foreground flex items-center gap-1"
-              >
-                {data.isCollapsed ? (
-                  <>
-                    <div className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                      +{descendantCount}
-                    </div>
-                    <ChevronRight className="h-4 w-4" />
-                  </>
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-            )}
+            <div className="flex-1 flex items-center gap-2">
+              {!isMid && nodeType === "task" && (
+                <button
+                  type="button"
+                  onClick={handleStatusToggle}
+                  className="hover:scale-110 active:scale-90 transition-transform flex-shrink-0"
+                >
+                  <StatusIcon status={data.status} size="h-4 w-4" />
+                </button>
+              )}
+              {isEditing ? (
+                <textarea
+                  {...commonTextareaProps}
+                  className={cn(
+                    commonTextareaProps.className,
+                    "text-sm font-semibold",
+                  )}
+                  rows={1}
+                />
+              ) : (
+                <div
+                  className={cn(
+                    "whitespace-pre-wrap break-words w-full cursor-text py-0.5 leading-relaxed transition-all duration-300",
+                    depth === 1 ? "text-base font-bold" : "text-sm font-semibold",
+                    isDone && !isMid && "text-muted-foreground/40 line-through grayscale",
+                    !data.title && "text-muted-foreground/30",
+                    isImportant && "text-amber-900 dark:text-amber-100 font-bold",
+                  )}
+                >
+                  {data.title || "New Node"}
+                </div>
+              )}
+
+              {childrenCount > 0 && !isMid && (
+                <button
+                  type="button"
+                  onClick={handleToggleCollapse}
+                  className="ml-auto p-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-muted-foreground flex items-center gap-1"
+                >
+                  {data.isCollapsed ? (
+                    <>
+                      <div className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                        +{descendantCount}
+                      </div>
+                      <ChevronRight className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Deadline & Meta Section */}
+          {nodeType === "task" && deadline && deadline !== "No deadline" && !isMid && (
+            <div className="flex items-center gap-1.5 mt-1 ml-9">
+              <div className={cn(
+                "px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 border",
+                deadline === "Today" ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800" :
+                deadline === "Tomorrow" ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" :
+                deadline === "Overdue" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/50 dark:text-zinc-400 dark:border-zinc-700"
+              )}>
+                <Clock className="h-2.5 w-2.5" />
+                {deadline}
+              </div>
+            </div>
+          )}
         </div>
       );
     };
@@ -403,22 +453,13 @@ export const TaskNode = memo(
             ? (isMobile ? "opacity-20 grayscale-[0.8]" : "opacity-20 blur-[2px]") 
             : "opacity-100 blur-0",
           isDone && !selected && "opacity-60 grayscale-[0.4]",
-          isMobile && "transition-opacity duration-200" // Faster opacity transition on mobile
+          isMobile && "transition-opacity duration-200",
+          isImportant && "z-20",
         )}
       >
-        {/* {selected && (
-          <NodeResizer
-            minWidth={
-              nodeType === "root" ? 280 : 160
-            }
-            minHeight={
-              nodeType === "root" ? 120 : 48
-            }
-            isVisible={selected}
-            lineClassName="border-primary"
-            handleClassName="h-3 w-3 bg-white border-2 border-primary rounded-full shadow-md"
-          />
-        )} */}
+        {isImportant && (
+          <div className="absolute inset-0 -m-1 rounded-[1.2rem] bg-gradient-to-t from-amber-500/20 via-orange-500/10 to-transparent blur-xl animate-pulse -z-10" />
+        )}
 
         {selected && !isEditing && (isHovered || isMobile) && (
           <RFNodeToolbar isVisible={true} position={Position.Top} offset={24}>
@@ -428,11 +469,15 @@ export const TaskNode = memo(
                 type={nodeType}
                 color={nodeColor}
                 isPinned={data.isPinned}
+                isImportant={isImportant}
+                deadline={deadline}
                 onAddChild={() => data.onAddChild?.(id)}
                 onDelete={() => data.onDelete?.(id)}
                 onTypeChange={(t) => data.onTypeChange?.(id, t)}
                 onColorChange={(c) => data.onColorChange?.(id, c)}
                 onTogglePin={() => data.onTogglePin?.(id)}
+                onToggleImportance={(imp) => updateNodeImportance(id, imp)}
+                onDeadlineChange={(dl) => updateNodeDeadline(id, dl)}
                 isRoot={id === "root"}
               />
             </div>
@@ -445,7 +490,21 @@ export const TaskNode = memo(
           </div>
         )}
 
-        {/* Handles for all 4 directions, each being both source and target */}
+        {renderContent()}
+
+        {atDepthLimit && selected && !isMacro && !isEditing && (
+          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 animate-in fade-in zoom-in-50 slide-in-from-top-4 duration-300 z-[50]">
+            <button
+              onClick={handleFocusHere}
+              className="px-5 py-2 bg-primary text-primary-foreground rounded-full text-xs font-black uppercase tracking-widest shadow-[0_10px_40px_rgba(0,0,0,0.3)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border-2 border-background ring-4 ring-primary/20"
+            >
+              <span>Focus Here</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Effortless Connection Zones (Top, Bottom, Left, Right) */}
         {(["top", "bottom", "left", "right"] as const).map((pos) => {
           const position =
             pos === "top"
@@ -457,41 +516,78 @@ export const TaskNode = memo(
                   : Position.Right;
 
           const isVisible = (isHovered || selected) && !isVeryZoomedOut && !isEditing;
+          
+          // Define zone dimensions optimized for device
+          const isHorizontal = pos === "top" || pos === "bottom";
+          const zoneSize = isMobile ? 48 : 36;
+          const zoneOffset = isMobile ? -24 : -18;
+
+          const zoneStyle: React.CSSProperties = {
+            position: "absolute",
+            [pos]: `${zoneOffset}px`,
+            left: isHorizontal ? "15%" : undefined,
+            right: isHorizontal ? "15%" : undefined,
+            top: !isHorizontal ? "15%" : undefined,
+            bottom: !isHorizontal ? "15%" : undefined,
+            width: isHorizontal ? "70%" : `${zoneSize}px`,
+            height: isHorizontal ? `${zoneSize}px` : "70%",
+            zIndex: 100,
+            pointerEvents: isEditing ? "none" : "all",
+          };
 
           return (
-            <div key={pos}>
-              {/* Target Handle (Input) */}
+            <div key={pos} style={zoneStyle} className="group/zone">
+              {/* Visible Indicator */}
+              <div 
+                className={cn(
+                  "absolute pointer-events-none transition-all duration-300 rounded-full",
+                  isHorizontal 
+                    ? "left-1/2 -translate-x-1/2 w-14 h-1.5" 
+                    : "top-1/2 -translate-y-1/2 w-1.5 h-14",
+                  pos === "top" && (isMobile ? "top-5" : "top-3"),
+                  pos === "bottom" && (isMobile ? "bottom-5" : "bottom-3"),
+                  pos === "left" && (isMobile ? "left-5" : "left-3"),
+                  pos === "right" && (isMobile ? "right-5" : "right-3"),
+                  isVisible ? "opacity-100 scale-100 bg-primary/30" : "opacity-0 scale-50 bg-transparent",
+                  "group-hover/zone:bg-primary group-hover/zone:scale-x-110 group-hover/zone:scale-y-110 group-active/zone:scale-90"
+                )}
+              />
+
+              {/* Handles - Placed absolutely to fill the zone */}
               <Handle
                 type="target"
                 position={position}
                 id={`${pos}-target`}
-                className={cn(
-                  "!w-4 !h-4 !bg-primary/20 border-2 border-primary transition-all duration-300 hover:!bg-primary hover:!scale-125 hover:z-50",
-                  isVisible ? "opacity-100 scale-100" : "opacity-0 scale-50 pointer-events-none",
-                )}
-                style={{
-                  [pos]: "-8px", // Move slightly outside
+                className="!bg-transparent !border-none !rounded-none"
+                style={{ 
+                  position: "absolute", 
+                  top: 0, 
+                  left: 0, 
+                  width: "100%", 
+                  height: "100%", 
+                  zIndex: 1,
+                  // Ensure React Flow can still find the center of the handle for edge pathing
+                  pointerEvents: "all"
                 }}
               />
-              {/* Source Handle (Output) */}
               <Handle
                 type="source"
                 position={position}
                 id={`${pos}-source`}
-                className={cn(
-                  "!w-4 !h-4 !bg-primary border-2 border-background shadow-sm transition-all duration-300 hover:!scale-125 hover:z-50",
-                  isVisible ? "opacity-100 scale-100" : "opacity-0 scale-50 pointer-events-none",
-                )}
-                style={{
-                  [pos]: "-8px", // Overlap target handle for "bidirectional" feel
+                className="!bg-transparent !border-none !rounded-none"
+                style={{ 
+                  position: "absolute", 
+                  top: 0, 
+                  left: 0, 
+                  width: "100%", 
+                  height: "100%", 
                   zIndex: 2,
+                  pointerEvents: isConnecting ? "none" : "all"
                 }}
               />
             </div>
           );
         })}
-
-        {renderContent()}
       </div>
     );
   },

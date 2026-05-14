@@ -23,7 +23,7 @@ export type TaskColor =
 
 export type RelationshipType =
   | "hierarchy"
-  | "related_to"
+  | "related"
   | "depends_on"
   | "blocks"
   | "inspired_by";
@@ -68,6 +68,8 @@ export interface TaskNodeData {
   onTitleChange?: (id: string, title: string) => void;
   onTypeChange?: (id: string, type: TaskType) => void;
   onColorChange?: (id: string, color: TaskColor) => void;
+  deadline?: string;
+  isImportant?: boolean;
 }
 
 export interface TaskEdgeData {
