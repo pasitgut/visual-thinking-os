@@ -504,7 +504,7 @@ export const TaskNode = memo(
           </div>
         )}
 
-        {/* Effortless Connection Zones (Top, Bottom, Left, Right) */}
+        {/* Effortless Connection Handles (Top, Bottom, Left, Right) */}
         {(["top", "bottom", "left", "right"] as const).map((pos) => {
           const position =
             pos === "top"
@@ -517,72 +517,39 @@ export const TaskNode = memo(
 
           const isVisible = (isHovered || selected) && !isVeryZoomedOut && !isEditing;
           
-          // Define zone dimensions optimized for device
-          const isHorizontal = pos === "top" || pos === "bottom";
-          const zoneSize = isMobile ? 48 : 36;
-          const zoneOffset = isMobile ? -24 : -18;
-
-          const zoneStyle: React.CSSProperties = {
-            position: "absolute",
-            [pos]: `${zoneOffset}px`,
-            left: isHorizontal ? "15%" : undefined,
-            right: isHorizontal ? "15%" : undefined,
-            top: !isHorizontal ? "15%" : undefined,
-            bottom: !isHorizontal ? "15%" : undefined,
-            width: isHorizontal ? "70%" : `${zoneSize}px`,
-            height: isHorizontal ? `${zoneSize}px` : "70%",
+          // Position handles exactly at the center of each side
+          const handleBaseStyle: React.CSSProperties = {
+            width: "12px",
+            height: "12px",
+            backgroundColor: "var(--primary)",
+            border: "2px solid white",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? "scale(1)" : "scale(0.5)",
             zIndex: 100,
-            pointerEvents: isEditing ? "none" : "all",
           };
 
           return (
-            <div key={pos} style={zoneStyle} className="group/zone">
-              {/* Visible Indicator */}
-              <div 
-                className={cn(
-                  "absolute pointer-events-none transition-all duration-300 rounded-full",
-                  isHorizontal 
-                    ? "left-1/2 -translate-x-1/2 w-14 h-1.5" 
-                    : "top-1/2 -translate-y-1/2 w-1.5 h-14",
-                  pos === "top" && (isMobile ? "top-5" : "top-3"),
-                  pos === "bottom" && (isMobile ? "bottom-5" : "bottom-3"),
-                  pos === "left" && (isMobile ? "left-5" : "left-3"),
-                  pos === "right" && (isMobile ? "right-5" : "right-3"),
-                  isVisible ? "opacity-100 scale-100 bg-primary/30" : "opacity-0 scale-50 bg-transparent",
-                  "group-hover/zone:bg-primary group-hover/zone:scale-x-110 group-hover/zone:scale-y-110 group-active/zone:scale-90"
-                )}
-              />
-
-              {/* Handles - Placed absolutely to fill the zone */}
+            <div key={pos}>
               <Handle
                 type="target"
                 position={position}
                 id={`${pos}-target`}
-                className="!bg-transparent !border-none !rounded-none"
+                className="!bg-primary hover:!scale-125 !transition-transform"
                 style={{ 
-                  position: "absolute", 
-                  top: 0, 
-                  left: 0, 
-                  width: "100%", 
-                  height: "100%", 
-                  zIndex: 1,
-                  // Ensure React Flow can still find the center of the handle for edge pathing
-                  pointerEvents: "all"
+                  ...handleBaseStyle,
+                  pointerEvents: isEditing ? "none" : "all",
                 }}
               />
               <Handle
                 type="source"
                 position={position}
                 id={`${pos}-source`}
-                className="!bg-transparent !border-none !rounded-none"
+                className="!bg-primary hover:!scale-125 !transition-transform"
                 style={{ 
-                  position: "absolute", 
-                  top: 0, 
-                  left: 0, 
-                  width: "100%", 
-                  height: "100%", 
-                  zIndex: 2,
-                  pointerEvents: isConnecting ? "none" : "all"
+                  ...handleBaseStyle,
+                  pointerEvents: isConnecting || isEditing ? "none" : "all",
                 }}
               />
             </div>

@@ -149,6 +149,8 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
     - **Adaptive Hit Areas**: Automatically scales zone size for Touch/Stylus (large targets) vs. Mouse (precise targets).
     - **Perimeter Interaction**: Users can drag from the outer edges of a node to start a connection, while the center 60% remains reserved for node dragging and text interaction.
     - **Visual Feedback**: Subtle directional indicators appear on hover or selection to guide the user.
+    - **Dynamic Edge Anchor Switching**: Spatially-aware connections that automatically reconnect to the most logical side (Top, Bottom, Left, Right) based on relative positioning. Includes **Hysteresis (40px buffer)** to prevent jitter and stable directional switching.
+    - **Refined Handle Appearance**: Connection points styled as visible primary-colored dots with white borders. **Progressive Disclosure**: Handles are hidden by default and reveal (Scale + Fade) only on selection or hover to minimize visual noise.
 - **Auto-Node Creation**: Dragging a connection from a node and dropping it onto the empty canvas automatically creates a new **Idea** node, connects it with a **Related** edge, and immediately focuses the title for editing.
 - **Structural Relationship Hierarchy**: Both `Hierarchy` (Subtask) and `Related` edges are treated as structural connections for progressive exploration, branch collapse, and navigation.
 - **Global Edge Default**: New connections default to **Related** type.
