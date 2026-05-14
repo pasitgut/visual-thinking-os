@@ -125,6 +125,9 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 
 ### Sync & Persistence System
 - Real-time Cloud Sync with visual status indicator (Synced / Saving / Error)
+- **Manual Sync Retry**: Users can manually re-trigger a sync operation from the `Sync Error` state.
+    - **Intelligent Cooldown**: 5-second throttle between manual retries to prevent network storms.
+    - **Visual Feedback**: Real-time spinner and status updates during the manual retry attempt.
 - Full data persistence (Types, Colors, Hierarchy, Content)
 - Firestore Offline Persistence for reliable work in all conditions
 
