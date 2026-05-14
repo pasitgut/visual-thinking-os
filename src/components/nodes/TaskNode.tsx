@@ -34,16 +34,16 @@ import type {
 import { NodeToolbar } from "./NodeToolbar";
 
 const getDeadlineLabel = (deadline?: string) => {
-  if (!deadline || deadline === "No deadline") return "No deadline";
+  if (!deadline || deadline === "No deadline") return "ยังไม่มีกำหนด";
   try {
     const date = parseISO(deadline);
     const today = startOfDay(new Date());
-    if (isToday(date)) return "Today";
-    if (isTomorrow(date)) return "Tomorrow";
-    if (isBefore(date, today)) return "Overdue";
-    return format(date, "MMM d");
+    if (isToday(date)) return "วันนี้";
+    if (isTomorrow(date)) return "พรุ่งนี้";
+    if (isBefore(date, today)) return "เลยกำหนดแล้ว!";
+    return format(date, "d MMM");
   } catch {
-    return "No deadline";
+    return "ยังไม่มีกำหนด";
   }
 };
 
@@ -362,7 +362,7 @@ export const TaskNode = memo(
                   depth === 0 ? "text-xl font-black" : depth === 1 ? "text-lg font-extrabold" : "text-base font-bold",
                   isDone && "text-white/60"
                 )}>
-                  {data.title || "Start"}
+                  {data.title || "เริ่มตรงนี้!"}
                 </span>
               )}
             </div>

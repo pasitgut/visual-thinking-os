@@ -50,15 +50,15 @@ const COLORS: { value: TaskColor; class: string }[] = [
 ];
 
 const TYPES: { value: TaskType; icon: LucideIcon; label: string }[] = [
-  { value: "task", icon: NODE_REGISTRY.task.icon, label: "Action" },
-  { value: "idea", icon: NODE_REGISTRY.idea.icon, label: "Idea" },
-  { value: "problem", icon: NODE_REGISTRY.problem.icon, label: "Issue" },
-  { value: "decision", icon: NODE_REGISTRY.decision.icon, label: "Decision" },
-  { value: "question", icon: NODE_REGISTRY.question.icon, label: "Question" },
+  { value: "task", icon: NODE_REGISTRY.task.icon, label: "ต้องทำ" },
+  { value: "idea", icon: NODE_REGISTRY.idea.icon, label: "ไอเดีย" },
+  { value: "problem", icon: NODE_REGISTRY.problem.icon, label: "ปัญหา" },
+  { value: "decision", icon: NODE_REGISTRY.decision.icon, label: "สรุปแล้ว" },
+  { value: "question", icon: NODE_REGISTRY.question.icon, label: "คำถาม" },
   {
     value: "reference",
     icon: NODE_REGISTRY.reference.icon,
-    label: "Reference",
+    label: "อ้างอิง",
   },
 ];
 
@@ -113,7 +113,7 @@ export const NodeToolbar = ({
               e.stopPropagation();
               setFocusNodeId(isFocused ? null : id);
             }}
-            title={isFocused ? "Exit Focus" : "Focus on this subtree"}
+            title={isFocused ? "เลิกโฟกัส" : "โฟกัสเฉพาะส่วนนี้"}
           >
             <Target className={iconClass} />
           </button>
@@ -129,7 +129,7 @@ export const NodeToolbar = ({
             e.stopPropagation();
             onAddChild();
           }}
-          title="Add Subtask"
+          title="เพิ่มงานย่อย"
         >
           <Plus className={iconClass} />
         </button>
@@ -145,7 +145,7 @@ export const NodeToolbar = ({
                   : "hover:bg-blue-50 text-blue-500/60",
               )}
               onPointerDown={(e) => e.stopPropagation()}
-              title={hasDeadline ? `Deadline: ${deadline}` : "Set Deadline"}
+              title={hasDeadline ? `กำหนดส่ง: ${deadline}` : "ใส่วันที่"}
             >
               <CalendarIcon className={iconClass} />
             </PopoverTrigger>
@@ -175,7 +175,7 @@ export const NodeToolbar = ({
                       }}
                       className="w-full py-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10 rounded-md transition-colors"
                     >
-                      Clear Deadline
+                      เอาวันที่ออก
                     </button>
                   </div>
                 )}
@@ -198,7 +198,7 @@ export const NodeToolbar = ({
               e.stopPropagation();
               onTogglePin();
             }}
-            title={isPinned ? "Unpin Node" : "Pin Node Position"}
+            title={isPinned ? "ปลดเข็มหมุด" : "ปักหมุดไว้ตรงนี้"}
           >
             {isPinned ? (
               <PinOff className={iconClass} />
@@ -278,7 +278,7 @@ export const NodeToolbar = ({
               e.stopPropagation();
               onToggleImportance(!isImportant);
             }}
-            title={isImportant ? "Mark as Normal" : "Mark as Important"}
+            title={isImportant ? "ลดความสำคัญ" : "เน้นว่าสำคัญ!"}
           >
             <Flame className={cn(iconClass, isImportant && "animate-pulse")} />
           </button>
@@ -294,7 +294,7 @@ export const NodeToolbar = ({
               e.stopPropagation();
               onDelete();
             }}
-            title="Delete Task"
+            title="ลบทิ้งเลย"
           >
             <Trash2 className={iconClass} />
           </button>

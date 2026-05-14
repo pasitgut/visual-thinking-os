@@ -35,7 +35,7 @@ export const ShortcutLegend = () => {
           <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
             <Keyboard className="h-4 w-4" />
           </div>
-          <span className="text-sm font-semibold">Pro Tips</span>
+          <span className="text-sm font-semibold">เทคนิคเซียน</span>
         </div>
         <Button
           variant="ghost"
@@ -48,17 +48,17 @@ export const ShortcutLegend = () => {
       </div>
 
       <div className="space-y-2.5">
-        <ShortcutItem keys={["Tab"]} label="Add child" />
-        <ShortcutItem keys={["Enter"]} label="Add sibling" />
-        <ShortcutItem keys={["↑", "↓", "←", "→"]} label="Navigate" />
-        <ShortcutItem keys={["Cmd", "K"]} label="Search nodes" />
-        <ShortcutItem keys={["Alt", "1-9"]} label="Jump to bookmark" />
-        <ShortcutItem keys={["Shift", "Tab"]} label="Go to parent" />
-        <ShortcutItem keys={["Del"]} label="Delete node" />
+        <ShortcutItem keys={["Tab"]} label="เพิ่มกิ่งย่อย" />
+        <ShortcutItem keys={["Enter"]} label="เพิ่มกิ่งข้างๆ" />
+        <ShortcutItem keys={["↑", "↓", "←", "→"]} label="เลื่อนไปมา" />
+        <ShortcutItem keys={["Cmd", "K"]} label="ค้นหาโหนด" />
+        <ShortcutItem keys={["Alt", "1-9"]} label="ไปที่ Bookmark" />
+        <ShortcutItem keys={["Shift", "Tab"]} label="กลับไปกิ่งแม่" />
+        <ShortcutItem keys={["Del"]} label="ลบโหนดทิ้ง" />
       </div>
 
       <p className="mt-4 text-[10px] text-muted-foreground text-center italic">
-        Alt+Ctrl+1-9 to set a bookmark.
+        กด Alt+Ctrl+1-9 เพื่อตั้ง Bookmark นะ
       </p>
     </div>
   );

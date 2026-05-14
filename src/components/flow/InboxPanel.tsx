@@ -66,10 +66,10 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
           </div>
           <div>
             <h2 className="font-bold text-sm uppercase tracking-widest">
-              Inbox
+              กล่องจดหมาย
             </h2>
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-              Quick Thoughts
+              ไอเดียที่จดไว้
             </p>
             </div>
             </div>
@@ -102,10 +102,10 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Your inbox is empty
+                กล่องว่างเปล่าเลย
               </p>
               <p className="text-xs text-muted-foreground/60 mt-1 italic">
-                Use Alt+I to capture thoughts quickly from anywhere
+                กด Alt+I เพื่อจดไอเดียด่วนๆ ได้นะ
               </p>
             </div>
           </div>
@@ -141,7 +141,7 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
                         className="h-8 gap-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm"
                         onClick={() => handleProcessItem(item.id, item.text)}
                       >
-                        <span>Process</span>
+                        <span>เอาเข้าบอร์ด</span>
                         <ArrowRight className="h-3 w-3" />
                       </Button>
                     </div>
@@ -160,7 +160,7 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
             ALT + I
           </kbd>
           <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-            to quick capture
+            เพื่อจดไอเดีย
           </span>
         </div>
       </div>
