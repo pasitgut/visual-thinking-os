@@ -58,12 +58,22 @@ export const SyncStatus = () => {
         </>
       )}
       {saveStatus === "error" && (
-        <>
-          <AlertCircle className="h-3.5 w-3.5 text-destructive" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-destructive/80">
-            Sync Error
-          </span>
-        </>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-destructive/80">
+              Sync Error
+            </span>
+          </div>
+          <button
+            onClick={() => useTaskStore.getState().retrySync()}
+            className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 transition-all active:scale-95 group"
+            title="Retry Sync"
+          >
+            <RefreshCw className="h-3 w-3 group-hover:rotate-180 transition-transform duration-500" />
+            <span className="text-[9px] font-bold uppercase tracking-tighter">Retry</span>
+          </button>
+        </div>
       )}
     </div>
   );

@@ -368,7 +368,17 @@ export const useTaskStore = create<TaskState>()(
 
         retrySync: async () => {
           const userId = (window as any).userId;
-          if (!userId) return;
+          if (!userId || get().saveStatus === "saving") return;
+
+          // Simple cooldown check
+          const now = Date.now();
+          const lastRetry = (window as any).lastRetryTime || 0;
+          if (now - lastRetry < 5000) {
+            console.log("Retry cooldown active");
+            return;
+          }
+          (window as any).lastRetryTime = now;
+
           set({ saveStatus: "saving" });
           try {
             await BoardService.saveBoard(userId, get().nodes, get().edges);
