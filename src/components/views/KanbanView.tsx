@@ -170,9 +170,12 @@ export const KanbanView = () => {
                 key={col.status}
                 column={col}
                 tasks={nodes.filter(
-                  (n) => n.data.status === col.status && n.id !== "root" && n.data.type === "task",
+                  (n) =>
+                    n.data.status === col.status &&
+                    n.id !== "root" &&
+                    n.data.type === "task",
                 )}
-                onAddTask={() => addTask(col.status)}
+                onAddTask={() => addTask({ status: col.status })}
                 onCardClick={handleCardClick}
               />
             ))}
@@ -191,13 +194,7 @@ export const KanbanView = () => {
           }}
         >
           {activeTask ? (
-            <KanbanCard
-              task={activeTask}
-              isOverlay
-              onTitleChange={updateNodeTitle}
-              onDelete={deleteNode}
-              onClick={() => {}}
-            />
+            <KanbanCard task={activeTask} isOverlay onClick={() => {}} />
           ) : null}
         </DragOverlay>
       </DndContext>
@@ -266,8 +263,6 @@ const ColumnContainer = ({
             <KanbanCard
               key={task.id}
               task={task}
-              onTitleChange={() => {}} // Handle through store
-              onDelete={() => {}} // Handle through store
               onClick={() => onCardClick(task.id)}
             />
           ))}
@@ -291,8 +286,6 @@ const KanbanCard = ({
 }: {
   task: TaskNode;
   isOverlay?: boolean;
-  onTitleChange: (id: string, title: string) => void;
-  onDelete: (id: string) => void;
   onClick: () => void;
 }) => {
   const {

@@ -42,12 +42,11 @@ export const ProductivityToolbar = () => {
     if (nodes.length === 0) {
       createRootTask();
     } else {
-      // 2.6 Spawn at viewport center
       const center = screenToFlowPosition({
         x: window.innerWidth / 2,
         y: window.innerHeight / 2,
       });
-      addTask("todo", undefined, center);
+      addTask({ status: "todo" }, center);
     }
   };
 
@@ -55,7 +54,6 @@ export const ProductivityToolbar = () => {
     <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
       <TooltipProvider>
         <div className="flex items-center gap-0.5 p-1 bg-background/80 backdrop-blur-md border rounded-xl shadow-lg pointer-events-auto animate-in slide-in-from-top-4 duration-500">
-
           <Tooltip>
             <TooltipTrigger
               className={cn(
@@ -113,7 +111,6 @@ export const ProductivityToolbar = () => {
           </Tooltip>
 
           <Separator orientation="vertical" className="h-3 mx-1" />
-
 
           <Tooltip>
             <TooltipTrigger

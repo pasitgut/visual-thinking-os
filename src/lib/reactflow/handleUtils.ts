@@ -9,7 +9,7 @@ export const calculateBestHandles = (
   sourceNode: Node,
   targetNode: Node,
   currentSourceHandle?: string | null,
-  currentTargetHandle?: string | null
+  currentTargetHandle?: string | null,
 ): { sourceHandle: string; targetHandle: string } => {
   const sourcePos = sourceNode.position;
   const targetPos = targetNode.position;
@@ -32,13 +32,13 @@ export const calculateBestHandles = (
   const absDy = Math.abs(dy);
 
   // Determine current orientation if it exists
-  const isCurrentlyHorizontal = 
-    currentSourceHandle?.startsWith('left') || 
-    currentSourceHandle?.startsWith('right');
-  
-  const isCurrentlyVertical = 
-    currentSourceHandle?.startsWith('top') || 
-    currentSourceHandle?.startsWith('bottom');
+  const isCurrentlyHorizontal =
+    currentSourceHandle?.startsWith("left") ||
+    currentSourceHandle?.startsWith("right");
+
+  const isCurrentlyVertical =
+    currentSourceHandle?.startsWith("top") ||
+    currentSourceHandle?.startsWith("bottom");
 
   let useHorizontal = absDx > absDy;
 
@@ -90,7 +90,7 @@ export const updateDynamicHandles = (nodes: Node[], edges: Edge[]): Edge[] => {
       sourceNode,
       targetNode,
       edge.sourceHandle,
-      edge.targetHandle
+      edge.targetHandle,
     );
 
     if (

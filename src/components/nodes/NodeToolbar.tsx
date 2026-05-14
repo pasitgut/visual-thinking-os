@@ -1,18 +1,26 @@
-import { Flame, Pin, PinOff, Plus, Target, Trash2, Calendar as CalendarIcon, type LucideIcon } from "lucide-react";
-import { useRef } from "react";
 import { format, parseISO } from "date-fns";
-import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
-import { cn } from "@/lib/utils";
-import { useTaskStore } from "@/stores/useTaskStore";
+import {
+  Calendar as CalendarIcon,
+  Flame,
+  type LucideIcon,
+  Pin,
+  PinOff,
+  Plus,
+  Target,
+  Trash2,
+} from "lucide-react";
+import { useRef } from "react";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import type { TaskColor, TaskType } from "@/types/task";
-
+import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
+import { cn } from "@/lib/utils";
+import { useTaskStore } from "@/stores/useTaskStore";
+import type { TaskColor, TaskType } from "@/types/task";
 
 interface NodeToolbarProps {
   id: string;
@@ -92,7 +100,7 @@ export const NodeToolbar = ({
       role="presentation"
       className={cn(
         "flex items-center gap-1 p-1 bg-background/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300 nodrag nopan pointer-events-auto max-w-[90vw] overflow-x-auto custom-scrollbar",
-        isMobile && "gap-2 p-1.5"
+        isMobile && "gap-2 p-1.5",
       )}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
@@ -123,7 +131,7 @@ export const NodeToolbar = ({
           type="button"
           className={cn(
             "flex items-center justify-center rounded-lg hover:bg-primary/10 text-primary transition-all active:scale-95",
-            btnClass
+            btnClass,
           )}
           onClick={(e) => {
             e.stopPropagation();
@@ -149,8 +157,8 @@ export const NodeToolbar = ({
             >
               <CalendarIcon className={iconClass} />
             </PopoverTrigger>
-            <PopoverContent 
-              className="w-auto p-0 border-none shadow-2xl" 
+            <PopoverContent
+              className="w-auto p-0 border-none shadow-2xl"
               align="center"
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
@@ -158,7 +166,11 @@ export const NodeToolbar = ({
               <div className="flex flex-col">
                 <Calendar
                   mode="single"
-                  selected={deadline && deadline !== "No deadline" ? parseISO(deadline) : undefined}
+                  selected={
+                    deadline && deadline !== "No deadline"
+                      ? parseISO(deadline)
+                      : undefined
+                  }
                   onSelect={(date) => {
                     if (date) {
                       onDeadlineChange(format(date, "yyyy-MM-dd"));
@@ -240,7 +252,9 @@ export const NodeToolbar = ({
           <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
 
           {/* Color Section */}
-          <div className={cn("flex items-center gap-1 px-1", isMobile && "gap-2")}>
+          <div
+            className={cn("flex items-center gap-1 px-1", isMobile && "gap-2")}
+          >
             {COLORS.map((c) => (
               <button
                 type="button"
@@ -263,7 +277,7 @@ export const NodeToolbar = ({
           </div>
 
           <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
-          
+
           {/* Importance Toggle */}
           <button
             type="button"
@@ -288,7 +302,7 @@ export const NodeToolbar = ({
             type="button"
             className={cn(
               "flex items-center justify-center rounded-lg hover:bg-destructive/10 text-destructive transition-all active:scale-95",
-              btnClass
+              btnClass,
             )}
             onClick={(e) => {
               e.stopPropagation();

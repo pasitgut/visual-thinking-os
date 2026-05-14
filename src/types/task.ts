@@ -60,16 +60,6 @@ export interface TaskNodeData {
   updatedAt?: number;
   isPinned?: boolean;
   isCollapsed?: boolean;
-  onAddChild: (parentId: string) => void;
-  onTogglePin?: (id: string) => void;
-  onToggleCollapse?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  onStatusChange?: (id: string, status: TaskStatus) => void;
-  onTitleChange?: (id: string, title: string) => void;
-  onTypeChange?: (id: string, type: TaskType) => void;
-  onColorChange?: (id: string, color: TaskColor) => void;
-  onDeadlineChange?: (id: string, deadline: string) => void;
-  onToggleImportance?: (id: string, isImportant: boolean) => void;
   deadline?: string;
   isImportant?: boolean;
 }

@@ -14,7 +14,7 @@ export const getIncrementalPosition = (
   const siblings = nodes.filter(
     (n) =>
       n.id !== parentNode.id && // Not the parent itself
-      edges.some(e => e.source === parentNode.id && e.target === n.id) // Is a child of this parent
+      edges.some((e) => e.source === parentNode.id && e.target === n.id), // Is a child of this parent
   );
 
   // If no siblings, place at the default offset
@@ -28,11 +28,11 @@ export const getIncrementalPosition = (
   // Find the max vertical extent of existing siblings to place the next one below/above
   const siblingCount = siblings.length;
   const verticalGap = 100; // Consistent vertical gap
-  
+
   // Center siblings vertically around the parent
-  const totalHeight = (siblingCount) * verticalGap;
-  const startY = parentNode.position.y - (totalHeight / 2);
-  
+  const totalHeight = siblingCount * verticalGap;
+  const startY = parentNode.position.y - totalHeight / 2;
+
   return {
     x: parentNode.position.x + offset.x,
     y: startY + siblingCount * verticalGap,

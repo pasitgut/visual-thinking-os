@@ -1,7 +1,18 @@
 "use client";
 
+import {
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import { Inbox, Loader2, LogOut, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ReactFlowProvider, useReactFlow } from "reactflow";
 import { InboxPanel } from "@/components/flow/InboxPanel";
 import { MindmapBoard } from "@/components/flow/MindmapBoard";
 import { QuickCaptureOverlay } from "@/components/flow/QuickCaptureOverlay";
@@ -9,24 +20,24 @@ import { SyncStatus } from "@/components/layout/SyncStatus";
 import { ViewSwitcher } from "@/components/layout/ViewSwitcher";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { KanbanView } from "@/components/views/KanbanView";
 import { LoginButton } from "@/features/auth/components/LoginButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
-import { useTaskStore } from "@/stores/useTaskStore";
-import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { cn } from "@/lib/utils";
 import { useInboxStore } from "@/stores/useInboxStore";
-
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { ReactFlowProvider, useReactFlow } from "reactflow";
+import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { useTaskStore } from "@/stores/useTaskStore";
 
 const DndHandler = ({ children }: { children: React.ReactNode }) => {
   const { screenToFlowPosition } = useReactFlow();
   const { removeItem } = useInboxStore();
   const { addTask, updateNodeTitle } = useTaskStore();
   const { isTablet } = useDeviceSpec();
-  const [activeItem, setActiveItem] = useState<{ id: string; text: string } | null>(null);
+  const [activeItem, setActiveItem] = useState<{
+    id: string;
+    text: string;
+  } | null>(null);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -39,7 +50,7 @@ const DndHandler = ({ children }: { children: React.ReactNode }) => {
         delay: 250,
         tolerance: 5,
       },
-    })
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -56,15 +67,25 @@ const DndHandler = ({ children }: { children: React.ReactNode }) => {
 
     if (!isTablet) return;
 
-    if (over && over.id === "react-flow-pane" && active.data.current?.type === "inbox-item") {
+    if (
+      over &&
+      over.id === "react-flow-pane" &&
+      active.data.current?.type === "inbox-item"
+    ) {
       const text = active.data.current.text;
       const id = active.id as string;
 
       // Coordinate Transformation
       const pointerEvent = event.activatorEvent as MouseEvent | TouchEvent;
-      const clientX = 'clientX' in pointerEvent ? pointerEvent.clientX : (pointerEvent as TouchEvent).touches[0].clientX;
-      const clientY = 'clientY' in pointerEvent ? pointerEvent.clientY : (pointerEvent as TouchEvent).touches[0].clientY;
-      
+      const clientX =
+        "clientX" in pointerEvent
+          ? pointerEvent.clientX
+          : (pointerEvent as TouchEvent).touches[0].clientX;
+      const clientY =
+        "clientY" in pointerEvent
+          ? pointerEvent.clientY
+          : (pointerEvent as TouchEvent).touches[0].clientY;
+
       const dropX = clientX + event.delta.x;
       const dropY = clientY + event.delta.y;
 
@@ -74,21 +95,18 @@ const DndHandler = ({ children }: { children: React.ReactNode }) => {
       });
 
       // Create node at drop coordinates
-      addTask("todo", "idea", position);
-      
-      // Delay title update slightly to ensure node is in state
-      const state = useTaskStore.getState();
-      const lastNode = state.nodes[state.nodes.length - 1];
-      if (lastNode) {
-        updateNodeTitle(lastNode.id, text);
-      }
+      addTask({ status: "todo", type: "idea", title: text }, position);
 
       await removeItem(id);
     }
   };
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       {children}
       <DragOverlay dropAnimation={null}>
         {activeItem ? (
@@ -157,13 +175,16 @@ export default function Home() {
               <span className="font-bold text-lg sm:text-xl truncate max-w-[120px] sm:max-w-none">
                 Visual Mindmap
               </span>
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
+              <Separator
+                orientation="vertical"
+                className="h-6 hidden sm:block"
+              />
               <ViewSwitcher />
             </div>
 
             <div className="flex items-center gap-1 sm:gap-3">
               <SyncStatus />
-              
+
               <div className="flex items-center border-x px-1 sm:px-3 gap-1 sm:gap-2">
                 {/* Global Quick Capture Button */}
                 <Button
@@ -206,10 +227,10 @@ export default function Home() {
           {/* View Area - Tablet Split-Pane with Toggle Support */}
           <div className="flex-1 flex overflow-hidden bg-background relative">
             {isTablet && (
-              <aside 
+              <aside
                 className={cn(
                   "border-r flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
-                  isInboxOpen ? "w-80" : "w-0 border-none"
+                  isInboxOpen ? "w-80" : "w-0 border-none",
                 )}
               >
                 <div className="w-80 h-full">
@@ -217,7 +238,7 @@ export default function Home() {
                 </div>
               </aside>
             )}
-            
+
             <div className="flex-1 relative overflow-hidden">
               {renderView()}
             </div>

@@ -1,11 +1,11 @@
 "use client";
 
-import { Search, Inbox, Plus, Zap } from "lucide-react";
-import { useTaskStore } from "@/stores/useTaskStore";
-import { useInboxStore } from "@/stores/useInboxStore";
-import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { Inbox, Plus, Search, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useInboxStore } from "@/stores/useInboxStore";
+import { useMobileUIStore } from "@/stores/useMobileUIStore";
+import { useTaskStore } from "@/stores/useTaskStore";
 
 /**
  * MobileCommandBar
@@ -26,7 +26,7 @@ export const MobileCommandBar = () => {
           size="icon"
           className={cn(
             "flex-col gap-1 h-14 w-14 rounded-xl",
-            isSearchOpen && "text-primary bg-primary/10"
+            isSearchOpen && "text-primary bg-primary/10",
           )}
           onClick={() => setSearchOpen(!isSearchOpen)}
         >
@@ -51,7 +51,7 @@ export const MobileCommandBar = () => {
           size="icon"
           className={cn(
             "flex-col gap-1 h-14 w-14 rounded-xl",
-            isInboxOpen && "text-primary bg-primary/10"
+            isInboxOpen && "text-primary bg-primary/10",
           )}
           onClick={() => setInboxOpen(!isInboxOpen)}
         >

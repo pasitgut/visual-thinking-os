@@ -1,6 +1,12 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
-import { type PrecacheEntry, Serwist, NetworkFirst, StaleWhileRevalidate, NetworkOnly } from "serwist";
+import {
+  NetworkFirst,
+  NetworkOnly,
+  type PrecacheEntry,
+  Serwist,
+  StaleWhileRevalidate,
+} from "serwist";
 
 declare const self: ServiceWorkerGlobalScope & {
   __SW_MANIFEST: (string | PrecacheEntry)[] | undefined;
@@ -38,7 +44,9 @@ const serwist = new Serwist({
     // 3. Images and Fonts - CacheFirst
     {
       matcher({ request }) {
-        return request.destination === "image" || request.destination === "font";
+        return (
+          request.destination === "image" || request.destination === "font"
+        );
       },
       handler: new StaleWhileRevalidate({
         cacheName: "media-assets",

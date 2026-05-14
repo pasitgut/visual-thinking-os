@@ -3,10 +3,10 @@
 import { ArrowRight, Inbox, X, Zap } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { useInboxStore } from "@/stores/useInboxStore";
-import { useMobileUIStore } from "@/stores/useMobileUIStore";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
 import { cn } from "@/lib/utils";
+import { useInboxStore } from "@/stores/useInboxStore";
+import { useMobileUIStore } from "@/stores/useMobileUIStore";
 
 /**
  * QuickCaptureOverlay
@@ -67,18 +67,18 @@ export const QuickCaptureOverlay = () => {
   if (!isQuickCaptureOpen) return null;
 
   return (
-    <div 
+    <div
       className={cn(
         "fixed inset-0 z-[300] flex flex-col bg-background/60 backdrop-blur-xl animate-in fade-in duration-300",
-        isMobile ? "p-0" : "items-center justify-center p-6"
+        isMobile ? "p-0" : "items-center justify-center p-6",
       )}
     >
-      <div 
+      <div
         className={cn(
           "bg-card border-primary/10 shadow-2xl flex flex-col overflow-hidden",
-          isMobile 
-            ? "w-full h-full rounded-none pt-safe pb-safe" 
-            : "w-full max-w-2xl rounded-3xl border animate-in zoom-in-95 slide-in-from-bottom-8"
+          isMobile
+            ? "w-full h-full rounded-none pt-safe pb-safe"
+            : "w-full max-w-2xl rounded-3xl border animate-in zoom-in-95 slide-in-from-bottom-8",
         )}
       >
         {/* Header */}
@@ -112,7 +112,7 @@ export const QuickCaptureOverlay = () => {
               ref={inputRef}
               className={cn(
                 "w-full bg-transparent border-none focus:ring-0 outline-none placeholder:text-muted-foreground/30 font-light tracking-tight transition-all",
-                isMobile ? "text-3xl" : "text-4xl"
+                isMobile ? "text-3xl" : "text-4xl",
               )}
               placeholder="มีไอเดียอะไรมั้ย? พิมพ์เลย..."
               value={inputValue}
@@ -122,10 +122,10 @@ export const QuickCaptureOverlay = () => {
           </div>
 
           {/* Action Area */}
-          <div 
+          <div
             className={cn(
               "px-6 py-6 border-t border-border/50 bg-muted/20 flex items-center justify-between",
-              isMobile && "pb-safe"
+              isMobile && "pb-safe",
             )}
           >
             {/* Desktop Hints */}
@@ -149,7 +149,9 @@ export const QuickCaptureOverlay = () => {
             {isMobile && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Inbox className="h-4 w-4" />
-                <span className="text-xs font-medium italic">กำลังเซฟลง Inbox...</span>
+                <span className="text-xs font-medium italic">
+                  กำลังเซฟลง Inbox...
+                </span>
               </div>
             )}
 
@@ -159,7 +161,7 @@ export const QuickCaptureOverlay = () => {
               disabled={!inputValue.trim()}
               className={cn(
                 "group flex items-center gap-3 px-6 py-3 rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-30 disabled:grayscale",
-                "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/40"
+                "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/40",
               )}
             >
               <span className="text-sm">จดเลย!</span>
