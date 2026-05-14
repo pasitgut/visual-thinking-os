@@ -133,7 +133,7 @@ export const TaskNode = memo(
     // FINE-GRAINED SELECTORS
     const setEditingNodeId = useTaskStore((s) => s.setEditingNodeId);
     const editingNodeId = useTaskStore((s) => s.editingNodeId);
-    const allEdgesCount = useTaskStore((s) => s.edges.length);
+    const allEdges = useTaskStore((s) => s.edges);
     const focusRootId = useTaskStore((s) => s.focusRootId);
     const pushFocusRootId = useTaskStore((s) => s.pushFocusRootId);
     const updateNodeDeadline = useTaskStore((s) => s.updateNodeDeadline);
