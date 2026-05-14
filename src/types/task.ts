@@ -68,6 +68,8 @@ export interface TaskNodeData {
   onTitleChange?: (id: string, title: string) => void;
   onTypeChange?: (id: string, type: TaskType) => void;
   onColorChange?: (id: string, color: TaskColor) => void;
+  onDeadlineChange?: (id: string, deadline: string) => void;
+  onToggleImportance?: (id: string, isImportant: boolean) => void;
   deadline?: string;
   isImportant?: boolean;
 }

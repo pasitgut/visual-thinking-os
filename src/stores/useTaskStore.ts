@@ -146,6 +146,8 @@ export const useTaskStore = create<TaskState>()(
               get().updateNodeContent(id, content),
             onTogglePin: (id: string) => get().toggleNodePin(id),
             onToggleCollapse: (id: string) => get().toggleNodeCollapse(id),
+            onDeadlineChange: (id: string, deadline: string) => get().updateNodeDeadline(id, deadline),
+            onToggleImportance: (id: string, isImportant: boolean) => get().updateNodeImportance(id, isImportant),
           },
         }));
 

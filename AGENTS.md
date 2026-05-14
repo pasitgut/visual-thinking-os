@@ -151,6 +151,11 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
     - **Visual Feedback**: Subtle directional indicators appear on hover or selection to guide the user.
     - **Dynamic Edge Anchor Switching**: Spatially-aware connections that automatically reconnect to the most logical side (Top, Bottom, Left, Right) based on relative positioning. Includes **Hysteresis (40px buffer)** to prevent jitter and stable directional switching.
     - **Refined Handle Appearance**: Connection points styled as visible primary-colored dots with white borders. **Progressive Disclosure**: Handles are hidden by default and reveal (Scale + Fade) only on selection or hover to minimize visual noise.
+- **Premium Important Node Visuals**: High-priority nodes feature a vibrant, reference-matched **Flame Aura**.
+    - **Multi-Layered FX**: Combines intense orange cores, golden outer glows, and wavy top-flicker gradients for a "burning" effect.
+    - **Flicker Animation**: Dynamic CSS-driven jitter and scale shifts (`flame-flicker`) mimic real fire behavior.
+    - **Zoom-Aware Efficiency**: Effects automatically dim and scale down during macro-zoom to preserve GPU performance and clarity.
+    - **Motion Safety**: Respects `prefers-reduced-motion` settings.
 - **Auto-Node Creation**: Dragging a connection from a node and dropping it onto the empty canvas automatically creates a new **Idea** node, connects it with a **Related** edge, and immediately focuses the title for editing.
 - **Structural Relationship Hierarchy**: Both `Hierarchy` (Subtask) and `Related` edges are treated as structural connections for progressive exploration, branch collapse, and navigation.
 - **Global Edge Default**: New connections default to **Related** type.
@@ -179,6 +184,11 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 - **Zoom-to-Thinking**: Double-click canvas to instantly fit and reorient the view.
 - **Progressive Disclosure**: Node toolbars and connection handles only appear when selected or hovered, reducing visual noise.
 - **Manual Pinning**: User-controlled node positioning (Toggle via toolbar) to preserve spatial memory
+- **Lightweight Task Deadlines**: Calm, date-only deadline management integrated into Task nodes.
+    - **Direct Interaction**: Single-click deadline label on nodes to open the Date Picker (Shadcn UI Popover + Calendar) without using the toolbar.
+    - **Relative Labeling**: Intelligent formatting for "Today", "Tomorrow", "Overdue", and absolute dates.
+    - **Color States**: Visual urgency cues (Red for Overdue, Amber for Today, Blue for Tomorrow).
+    - **Clear Option**: Quick "Clear Deadline" button within the picker for effortless removal.
 - Mobile Optimized: Large touch targets and simplified toolbars
 - Node Resizing: Manual + Auto-resize based on text
 - Auto Layout (Dagre-driven): Respects pinned nodes and avoids mental map disruption
