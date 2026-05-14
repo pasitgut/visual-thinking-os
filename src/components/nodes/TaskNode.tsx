@@ -130,15 +130,17 @@ export const TaskNode = memo(
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const { 
-      setEditingNodeId, 
-      editingNodeId, 
-      edges: allEdges, 
-      focusRootId, 
-      pushFocusRootId,
-      updateNodeDeadline,
-      updateNodeImportance,
-    } = useTaskStore();
+    // FINE-GRAINED SELECTORS
+    const setEditingNodeId = useTaskStore((s) => s.setEditingNodeId);
+    const editingNodeId = useTaskStore((s) => s.editingNodeId);
+    const allEdgesCount = useTaskStore((s) => s.edges.length);
+    const focusRootId = useTaskStore((s) => s.focusRootId);
+    const pushFocusRootId = useTaskStore((s) => s.pushFocusRootId);
+    const updateNodeDeadline = useTaskStore((s) => s.updateNodeDeadline);
+    const updateNodeImportance = useTaskStore((s) => s.updateNodeImportance);
+    
+    // Check if ANY node is dragging to disable expensive filters globally for 60fps
+    const isAnyDragging = useStore((s) => s.nodes.some(n => n.dragging));
     
     const updateNodeInternals = useUpdateNodeInternals();
 
@@ -527,8 +529,9 @@ export const TaskNode = memo(
         onContextMenu={(e) => isMobile && e.preventDefault()}
         className={cn(
           "group relative transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
+          // PERFORMANCE: Disable expensive filters during ANY drag to maintain 60fps
           isDimmed 
-            ? (isMobile ? "opacity-20 grayscale-[0.8]" : "opacity-20 blur-[2px]") 
+            ? (isMobile || isAnyDragging ? "opacity-20 grayscale-[0.8]" : "opacity-20 blur-[2px]") 
             : "opacity-100 blur-0",
           isDone && !selected && "opacity-60 grayscale-[0.4]",
           isMobile && "transition-opacity duration-200",
@@ -536,7 +539,7 @@ export const TaskNode = memo(
         )}
       >
         {/* Premium "Important" Aura (Reference-matched Flame) */}
-        {isImportant && (
+        {isImportant && !isVeryZoomedOut && (
           <div className={cn(
             "absolute inset-0 -z-10 pointer-events-none transition-all duration-1000 ease-in-out",
             isVeryZoomedOut ? "opacity-0 scale-90" : "opacity-100 scale-100"

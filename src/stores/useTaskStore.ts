@@ -118,8 +118,16 @@ export const useTaskStore = create<TaskState>()(
             set({ saveStatus: "error" });
           }
         },
-        2000,
+        5000,
       );
+
+      // PERFORMANCE: Throttled version of handle updates for performance
+      const throttledUpdateHandles = debounce((nodes: TaskNode[], edges: Edge[]) => {
+        const updatedEdges = updateDynamicHandles(nodes, edges);
+        if (updatedEdges !== get().edges) {
+          set({ edges: updatedEdges });
+        }
+      }, 32); // ~2 frames buffer
 
       const wireData = (nodes: TaskNode[]) =>
         nodes.map((node) => ({
@@ -152,6 +160,7 @@ export const useTaskStore = create<TaskState>()(
         }));
 
       return {
+// ... existing state ...
         nodes: [],
         edges: [],
         currentView: "mindmap",
@@ -196,10 +205,11 @@ export const useTaskStore = create<TaskState>()(
           const currentEdges = get().edges;
 
           let updatedNodes = [...currentNodes];
-          
           const positionChanges = changes.filter(
-            (c) => c.type === "position" && c.dragging,
+            (c) => c.type === "position" && (c as any).dragging,
           );
+          
+          const isDragging = positionChanges.length > 0;
 
           if (positionChanges.length === 1) {
             const change = positionChanges[0] as any;
@@ -213,44 +223,50 @@ export const useTaskStore = create<TaskState>()(
                 const subtreeIds = getSubtreeIds(node.id, currentEdges);
                 subtreeIds.delete(node.id);
 
-                updatedNodes = updatedNodes.map((n) => {
-                  if (subtreeIds.has(n.id)) {
-                    return {
-                      ...n,
-                      position: {
-                        x: n.position.x + dx,
-                        y: n.position.y + dy,
-                      },
-                    };
-                  }
-                  return n;
-                });
+                if (subtreeIds.size > 0) {
+                  updatedNodes = updatedNodes.map((n) => {
+                    if (subtreeIds.has(n.id)) {
+                      return {
+                        ...n,
+                        position: {
+                          x: n.position.x + dx,
+                          y: n.position.y + dy,
+                        },
+                      };
+                    }
+                    return n;
+                  });
+                }
               }
             }
           }
 
           const finalNodes = applyNodeChanges(changes, updatedNodes) as TaskNode[];
           
-          let finalEdges = currentEdges;
-          if (changes.some((c) => c.type === "position")) {
-            finalEdges = updateDynamicHandles(finalNodes, currentEdges);
-          }
-
-          const selectionChange = changes.find((c) => c.type === "select");
-          
-          if (selectionChange) {
-            const selectedIds = finalNodes
-              .filter((n) => n.selected)
-              .map((n) => n.id);
-            
-            set({
-              nodes: finalNodes,
-              edges: finalEdges,
-              selectedNodeIds: selectedIds,
-              editingNodeId: selectedIds.length === 0 ? null : get().editingNodeId,
-            });
+          if (isDragging) {
+            // During drag, update nodes immediately for responsiveness
+            set({ nodes: finalNodes });
+            // Throttle handle recalculation and edge updates to preserve 60fps
+            throttledUpdateHandles(finalNodes, currentEdges);
           } else {
-            set({ nodes: finalNodes, edges: finalEdges });
+            // For other changes (select, delete, drag end), update everything normally
+            const finalEdges = updateDynamicHandles(finalNodes, currentEdges);
+            const selectionChange = changes.find((c) => c.type === "select");
+            
+            if (selectionChange) {
+              const selectedIds = finalNodes
+                .filter((n) => n.selected)
+                .map((n) => n.id);
+              
+              set({
+                nodes: finalNodes,
+                edges: finalEdges,
+                selectedNodeIds: selectedIds,
+                editingNodeId: selectedIds.length === 0 ? null : get().editingNodeId,
+              });
+            } else {
+              set({ nodes: finalNodes, edges: finalEdges });
+            }
           }
 
           if (changes.some((c) => c.type === "position")) {
