@@ -140,7 +140,9 @@ export const TaskNode = memo(
     const updateNodeImportance = useTaskStore((s) => s.updateNodeImportance);
     
     // Check if ANY node is dragging to disable expensive filters globally for 60fps
-    const isAnyDragging = useStore((s) => s.nodes.some(n => n.dragging));
+    const isAnyDragging = useStore((s) => 
+      Array.from(s.nodeInternals.values()).some(n => n.dragging)
+    );
     
     const updateNodeInternals = useUpdateNodeInternals();
 
