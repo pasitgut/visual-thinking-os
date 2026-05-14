@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ChevronDown, ChevronRight, Circle, Clock, Pin } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, Circle, Clock, Pin, Calendar as CalendarIcon } from "lucide-react";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -11,6 +11,7 @@ import {
   useStore,
   useUpdateNodeInternals,
 } from "reactflow";
+import { format, isToday, isTomorrow, isBefore, startOfDay, parseISO } from "date-fns";
 import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -19,12 +20,55 @@ import { useMobileUIStore } from "@/stores/useMobileUIStore";
 import { useLongPress } from "@/hooks/useLongPress";
 import { getSubtreeIds } from "@/lib/reactflow/focusUtils";
 import { isNodeAtDepthLimit } from "@/lib/reactflow/focusTraversal";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import type {
   TaskColor,
   TaskNodeData,
   TaskStatus,
 } from "@/types/task";
 import { NodeToolbar } from "./NodeToolbar";
+
+const getDeadlineLabel = (deadline?: string) => {
+  if (!deadline || deadline === "No deadline") return "No deadline";
+  try {
+    const date = parseISO(deadline);
+    const today = startOfDay(new Date());
+    if (isToday(date)) return "Today";
+    if (isTomorrow(date)) return "Tomorrow";
+    if (isBefore(date, today)) return "Overdue";
+    return format(date, "MMM d");
+  } catch {
+    return "No deadline";
+  }
+};
+
+const getDeadlineStyles = (deadline?: string) => {
+  if (!deadline || deadline === "No deadline") 
+    return "text-muted-foreground/40 hover:text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5";
+  
+  try {
+    const date = parseISO(deadline);
+    const today = startOfDay(new Date());
+    
+    if (isBefore(date, today)) {
+       return "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20";
+    }
+    if (isToday(date)) {
+       return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800 hover:bg-amber-200 dark:hover:bg-amber-900/40";
+    }
+    if (isTomorrow(date)) {
+       return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-900/40";
+    }
+    return "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/50 dark:text-zinc-400 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800";
+  } catch {
+    return "text-muted-foreground/40 hover:text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5";
+  }
+};
 
 const StatusIcon = ({
   status,
@@ -423,18 +467,52 @@ export const TaskNode = memo(
           </div>
 
           {/* Deadline & Meta Section */}
-          {nodeType === "task" && deadline && deadline !== "No deadline" && !isMid && (
+          {nodeType === "task" && !isMid && (
             <div className="flex items-center gap-1.5 mt-1 ml-9">
-              <div className={cn(
-                "px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 border",
-                deadline === "Today" ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800" :
-                deadline === "Tomorrow" ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" :
-                deadline === "Overdue" ? "bg-destructive/10 text-destructive border-destructive/20" :
-                "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/50 dark:text-zinc-400 dark:border-zinc-700"
-              )}>
-                <Clock className="h-2.5 w-2.5" />
-                {deadline}
-              </div>
+              <Popover>
+                <PopoverTrigger
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className={cn(
+                    "px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 border transition-all active:scale-95 group/deadline relative overflow-hidden",
+                    getDeadlineStyles(deadline)
+                  )}
+                >
+                  <CalendarIcon className="h-2.5 w-2.5" />
+                  <span>{getDeadlineLabel(deadline)}</span>
+                </PopoverTrigger>
+                <PopoverContent 
+                  className="w-auto p-0 border-none shadow-2xl" 
+                  align="start"
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <div className="flex flex-col">
+                    <Calendar
+                      mode="single"
+                      selected={deadline && deadline !== "No deadline" ? parseISO(deadline) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          data.onDeadlineChange?.(id, format(date, "yyyy-MM-dd"));
+                        }
+                      }}
+                    />
+                    {deadline && deadline !== "No deadline" && (
+                      <div className="p-2 border-t border-border bg-muted/50">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            data.onDeadlineChange?.(id, "No deadline");
+                          }}
+                          className="w-full py-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+                        >
+                          Clear Deadline
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
         </div>
@@ -457,24 +535,30 @@ export const TaskNode = memo(
           isImportant && "z-20",
         )}
       >
-        {/* Premium "Important" Aura */}
+        {/* Premium "Important" Aura (Reference-matched Flame) */}
         {isImportant && (
           <div className={cn(
             "absolute inset-0 -z-10 pointer-events-none transition-all duration-1000 ease-in-out",
             isVeryZoomedOut ? "opacity-0 scale-90" : "opacity-100 scale-100"
           )}>
-            {/* Calm Golden Glow */}
-            <div className="absolute inset-[-6px] rounded-[1.6rem] bg-amber-400/20 blur-2xl motion-safe:animate-aura-float" />
+            {/* Primary Intense Glow (The Core) */}
+            <div className="absolute inset-[-4px] rounded-[1.4rem] bg-orange-500/40 blur-xl motion-safe:animate-aura-float" />
             
-            {/* Subtle Inner Glow */}
-            <div className="absolute inset-0 rounded-xl border border-amber-400/20 shadow-[0_0_20px_rgba(251,191,36,0.15)]" />
-
-            {/* Tiny Flame-like Top Aura */}
+            {/* Vibrant Outer Ring (Flame Licks) */}
             {!isMid && (
-              <div 
-                className="absolute inset-x-12 -top-12 h-24 bg-gradient-to-t from-amber-500/20 via-amber-400/5 to-transparent blur-2xl motion-safe:animate-flame-subtle" 
-              />
+              <>
+                <div className="absolute inset-[-12px] rounded-[2rem] bg-amber-400/30 blur-2xl motion-safe:animate-aura-float [animation-delay:-1s]" />
+                
+                {/* Wavy Flame Top Effect */}
+                <div className="absolute inset-x-4 -top-16 h-32 bg-gradient-to-t from-orange-500/40 via-amber-400/20 to-transparent blur-3xl motion-safe:animate-flame-flicker" />
+                
+                {/* Secondary Flicker Layer */}
+                <div className="absolute inset-x-8 -top-12 h-24 bg-gradient-to-t from-yellow-400/30 via-amber-300/10 to-transparent blur-2xl motion-safe:animate-flame-flicker [animation-delay:-1.5s]" />
+              </>
             )}
+
+            {/* Sharp Inner Highlight (Matches the "Hot" edge in image) */}
+            <div className="absolute inset-0 rounded-xl border-2 border-amber-400/40 shadow-[0_0_15px_rgba(251,191,36,0.4)]" />
           </div>
         )}
 

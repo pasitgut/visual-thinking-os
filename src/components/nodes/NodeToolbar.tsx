@@ -1,9 +1,15 @@
-"use client";
-
-import { Flame, Pin, PinOff, Plus, Target, Trash2, type LucideIcon } from "lucide-react";
+import { Flame, Pin, PinOff, Plus, Target, Trash2, Calendar as CalendarIcon, type LucideIcon } from "lucide-react";
+import { useRef } from "react";
+import { format, parseISO } from "date-fns";
 import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/useTaskStore";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import type { TaskColor, TaskType } from "@/types/task";
 
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
@@ -12,6 +18,7 @@ interface NodeToolbarProps {
   id: string;
   type: TaskType;
   color: TaskColor;
+  deadline?: string;
   isPinned?: boolean;
   isImportant?: boolean;
   onAddChild: () => void;
@@ -20,6 +27,7 @@ interface NodeToolbarProps {
   onColorChange: (color: TaskColor) => void;
   onTogglePin: () => void;
   onToggleImportance: (isImportant: boolean) => void;
+  onDeadlineChange: (deadline: string) => void;
   isRoot?: boolean;
 }
 
@@ -64,9 +72,11 @@ export const NodeToolbar = ({
   onColorChange,
   onTogglePin,
   onToggleImportance,
+  onDeadlineChange,
   isRoot,
   isPinned,
   isImportant,
+  deadline,
 }: NodeToolbarProps) => {
   const { focusNodeId, setFocusNodeId } = useTaskStore();
   const { isMobile } = useDeviceSpec();
@@ -74,6 +84,8 @@ export const NodeToolbar = ({
 
   const btnClass = isMobile ? "h-10 w-10" : "h-8 w-8";
   const iconClass = isMobile ? "h-5 w-5" : "h-4 w-4";
+
+  const hasDeadline = deadline && deadline !== "No deadline";
 
   return (
     <div
@@ -121,6 +133,56 @@ export const NodeToolbar = ({
         >
           <Plus className={iconClass} />
         </button>
+
+        {type === "task" && (
+          <Popover>
+            <PopoverTrigger
+              className={cn(
+                "flex items-center justify-center rounded-lg transition-all active:scale-95 relative overflow-hidden",
+                btnClass,
+                hasDeadline
+                  ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 shadow-sm"
+                  : "hover:bg-blue-50 text-blue-500/60",
+              )}
+              onPointerDown={(e) => e.stopPropagation()}
+              title={hasDeadline ? `Deadline: ${deadline}` : "Set Deadline"}
+            >
+              <CalendarIcon className={iconClass} />
+            </PopoverTrigger>
+            <PopoverContent 
+              className="w-auto p-0 border-none shadow-2xl" 
+              align="center"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col">
+                <Calendar
+                  mode="single"
+                  selected={deadline && deadline !== "No deadline" ? parseISO(deadline) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      onDeadlineChange(format(date, "yyyy-MM-dd"));
+                    }
+                  }}
+                />
+                {hasDeadline && (
+                  <div className="p-2 border-t border-border bg-muted/50">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeadlineChange("No deadline");
+                      }}
+                      className="w-full py-1.5 text-[11px] font-bold text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+                    >
+                      Clear Deadline
+                    </button>
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
 
         {!isRoot && (
           <button

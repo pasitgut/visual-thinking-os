@@ -48,17 +48,19 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  --animation-aura-float: aura-float 8s ease-in-out infinite;
-  --animation-flame-subtle: flame-subtle 4s ease-in-out infinite;
+  --animation-aura-float: aura-float 4s ease-in-out infinite;
+  --animation-flame-flicker: flame-flicker 3s ease-in-out infinite;
 
   @keyframes aura-float {
-    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.5; filter: blur(12px); }
-    50% { transform: scale(1.1) translate(1px, -2px); opacity: 0.8; filter: blur(16px); }
+    0%, 100% { transform: scale(1); opacity: 0.6; filter: blur(14px); }
+    50% { transform: scale(1.15); opacity: 0.9; filter: blur(18px); }
   }
 
-  @keyframes flame-subtle {
-    0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.4; }
-    50% { transform: translateY(-8px) scaleX(0.95); opacity: 0.6; }
+  @keyframes flame-flicker {
+    0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.5; }
+    25% { transform: translateY(-4px) scaleX(1.05) rotate(1deg); opacity: 0.7; }
+    50% { transform: translateY(-8px) scale(1.1) rotate(-1deg); opacity: 0.8; }
+    75% { transform: translateY(-4px) scaleX(0.95) rotate(1deg); opacity: 0.7; }
   }
 }
 
