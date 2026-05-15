@@ -14,7 +14,6 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
@@ -23,16 +22,14 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
 import {
-  Calendar,
   CheckCircle2,
   Circle,
   CircleDot,
-  GripVertical,
   Hash,
   MoreHorizontal,
   Plus,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { cn } from "@/lib/utils";
@@ -123,7 +120,7 @@ export const KanbanView = () => {
     }
   };
 
-  const onDragEnd = (event: DragEndEvent) => {
+  const onDragEnd = (_event: DragEndEvent) => {
     setActiveTask(null);
   };
 

@@ -93,7 +93,7 @@ export const useKeyboardShortcuts = () => {
       // Actions that require a selected node
       if (selectedNodeIds.length === 1) {
         const selectedId = selectedNodeIds[0];
-        const selectedNode = nodes.find((n) => n.id === selectedId);
+        const _selectedNode = nodes.find((n) => n.id === selectedId);
 
         // Tab -> Create Child
         if (event.key === "Tab" && !event.shiftKey) {

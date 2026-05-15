@@ -1,6 +1,5 @@
 import {
   type Firestore,
-  getFirestore,
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,

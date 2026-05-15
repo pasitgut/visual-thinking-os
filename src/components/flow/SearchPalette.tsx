@@ -3,14 +3,8 @@
 import { Clock, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useReactFlow } from "reactflow";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/useTaskStore";
 
 export const SearchPalette = () => {

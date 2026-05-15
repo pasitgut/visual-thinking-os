@@ -44,7 +44,7 @@ export const FocusBreadcrumbs = () => {
           <Home className="h-4 w-4" />
         </button>
 
-        {explorationPath.map((node, index) => (
+        {explorationPath.map((node, _index) => (
           <React.Fragment key={node.id}>
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30" />
             <button

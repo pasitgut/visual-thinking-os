@@ -1,12 +1,4 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  setDoc,
-  where,
-} from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import type { Edge } from "reactflow";
 import { db } from "@/lib/firebase/firestore";
 import type { TaskNode } from "@/types/task";

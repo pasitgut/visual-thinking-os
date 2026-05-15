@@ -1,12 +1,11 @@
 "use client";
 
 import { format } from "date-fns";
-import { ArrowRight, Clock, Inbox, Layers, Trash2, X, Zap } from "lucide-react";
+import { ArrowRight, Clock, Inbox, Layers, Trash2, X } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useInboxStore } from "@/stores/useInboxStore";
-import { useMobileUIStore } from "@/stores/useMobileUIStore";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { DraggableInboxItem } from "./DraggableInboxItem";
 

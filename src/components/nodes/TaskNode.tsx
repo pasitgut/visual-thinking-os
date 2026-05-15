@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/popover";
 import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
-import { useLongPress } from "@/hooks/useLongPress";
 import { getDeadlineLabel, getDeadlineStyles } from "@/lib/dateUtils";
 import { getSubtreeIds, isNodeAtDepthLimit } from "@/lib/reactflow/graphUtils";
 import { cn } from "@/lib/utils";
