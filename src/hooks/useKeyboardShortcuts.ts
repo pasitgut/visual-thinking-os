@@ -98,23 +98,7 @@ export const useKeyboardShortcuts = () => {
         // Tab -> Create Child
         if (event.key === "Tab" && !event.shiftKey) {
           event.preventDefault();
-          const parentNode = nodes.find((n) => n.id === selectedId);
           createNode({ parentId: selectedId });
-
-          setTimeout(() => {
-            const state = useTaskStore.getState();
-            const newNodeId = state.selectedNodeIds[0];
-            const newNode = state.nodes.find((n) => n.id === newNodeId);
-            if (newNode && parentNode) {
-              // Smart Framing: Center on the centroid of parent and child
-              const centerX = (parentNode.position.x + newNode.position.x) / 2;
-              const centerY = (parentNode.position.y + newNode.position.y) / 2;
-              setCenter(centerX, centerY, {
-                zoom: Math.min(getViewport().zoom, 0.8),
-                duration: 600, // Slightly slower for context preservation
-              });
-            }
-          }, 50);
           return;
         }
 
@@ -126,17 +110,6 @@ export const useKeyboardShortcuts = () => {
           } else {
             createNode({ siblingId: selectedId });
           }
-
-          setTimeout(() => {
-            const state = useTaskStore.getState();
-            const newNodeId = state.selectedNodeIds[0];
-            const newNode = state.nodes.find((n) => n.id === newNodeId);
-            if (newNode) {
-              setCenter(newNode.position.x, newNode.position.y, {
-                duration: 600,
-              });
-            }
-          }, 50);
           return;
         }
 

@@ -170,6 +170,7 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
     - **Motion Safety**: Respects `prefers-reduced-motion` settings.
 - **Unified Node Creation Service**: A centralized `createNode` service in the store handles all creation pathways (Toolbar, Keyboard, Drag-and-Drop, Edge-Drag).
     - **Consistent Creation UX**: Every new node automatically receives text focus (`editingNodeId`) and centers the viewport.
+    - **Robust Auto-Focus Strategy**: Uses a multi-stage macro-task queue (`setTimeout`) and native `autoFocus` to guarantee the cursor is ready for typing, bypassing React Flow's internal focus stealing.
     - **Smart Auto-Focus**: Intelligently skips auto-focus if a title is already provided (e.g., during Brainstorming or processing from Inbox) to maintain flow.
     - **Standardized Fallback**: New nodes default to "Untitled" if blurred without entering text, ensuring no empty nodes exist.
 - **Auto-Node Creation**: Dragging a connection from a node and dropping it onto the empty canvas automatically creates a new **Idea** node via the unified service.
