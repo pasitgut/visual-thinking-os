@@ -194,6 +194,7 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 - **Spatial Bookmarks**: Save and jump to specific camera views using `Alt + 1-9` (Jump) and `Alt + Ctrl + 1-9` (Set). Solves the "getting lost" problem in massive boards.
 - **Focus-First Progressive Exploration**: A cinematic navigation system designed for calm and intentional discovery of large mindmaps. 
     - **Depth-Limited Rendering**: Automatically restricts the visible graph to the **Current Focus Root + 2 levels of depth**.
+    - **Depth Limit Descendant Badge**: Nodes at the depth limit display a `+N` badge (reusing the collapse UI) to indicate hidden subtrees. Clicking the badge triggers a Focus transition.
     - **Orientation Preservation**: Subtle rendering of the parent node (low opacity + blur/grayscale) to maintain spatial context.
     - **Cinematic Transitions**: Multi-stage animation sequence (Zoom out → Pan → Progressive subtree reveal → Zoom in) when diving into new nodes.
     - **Navigation History**: Persistent breadcrumb trail and stack-based history (`push`/`pop`) for moving through hierarchical thought spaces.

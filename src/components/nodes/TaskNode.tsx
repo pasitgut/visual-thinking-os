@@ -144,16 +144,16 @@ export const TaskNode = memo(
       ).length;
     }, [allEdges, id]);
 
-    const descendantCount = useMemo(() => {
-      if (!data.isCollapsed) return 0;
-      const ids = getSubtreeIds(id, allEdges);
-      return ids.size - 1; // Subtract self
-    }, [id, allEdges, data.isCollapsed]);
-
     // Progressive Exploration: Depth Limit Check
     const atDepthLimit = useMemo(() => {
       return isNodeAtDepthLimit(id, focusRootId, allEdges, 2);
     }, [id, focusRootId, allEdges]);
+
+    const descendantCount = useMemo(() => {
+      if (!data.isCollapsed && !atDepthLimit) return 0;
+      const ids = getSubtreeIds(id, allEdges);
+      return ids.size - 1; // Subtract self
+    }, [id, allEdges, data.isCollapsed, atDepthLimit]);
 
     const handleFocusHere = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -448,10 +448,17 @@ export const TaskNode = memo(
               {childrenCount > 0 && !isMid && (
                 <button
                   type="button"
-                  onClick={handleToggleCollapse}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (atDepthLimit) {
+                      handleFocusHere(e);
+                    } else {
+                      handleToggleCollapse(e);
+                    }
+                  }}
                   className="ml-auto p-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-muted-foreground flex items-center gap-1"
                 >
-                  {data.isCollapsed ? (
+                  {data.isCollapsed || atDepthLimit ? (
                     <>
                       <div className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                         +{descendantCount}
