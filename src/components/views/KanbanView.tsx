@@ -71,7 +71,7 @@ export const KanbanView = () => {
     updateNodeStatus,
     updateNodeTitle,
     deleteNode,
-    addTask,
+    createNode,
     setSelectedNodeIds,
   } = useTaskStore();
   const [activeTask, setActiveTask] = useState<TaskNode | null>(null);
@@ -147,7 +147,7 @@ export const KanbanView = () => {
           <Button
             variant="outline"
             className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm gap-2 h-9 px-3 text-xs sm:text-sm sm:h-10 sm:px-4"
-            onClick={() => addTask()}
+            onClick={() => createNode()}
           >
             <Plus size={16} />{" "}
             <span className="hidden sm:inline">Add Task</span>
@@ -175,7 +175,9 @@ export const KanbanView = () => {
                     n.id !== "root" &&
                     n.data.type === "task",
                 )}
-                onAddTask={() => addTask({ status: col.status })}
+                onAddTask={() =>
+                  createNode({ initialData: { status: col.status } })
+                }
                 onCardClick={handleCardClick}
               />
             ))}

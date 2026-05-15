@@ -15,7 +15,6 @@ import "reactflow/dist/style.css";
 import { useDroppable } from "@dnd-kit/core";
 import { v4 as uuidv4 } from "uuid";
 import { RelationshipEdge } from "@/components/flow/RelationshipEdge";
-import { BottomSheetContainer } from "@/components/mobile/BottomSheetContainer";
 import { MobileNodeActions } from "@/components/mobile/MobileNodeActions";
 import { TaskNode } from "@/components/nodes/TaskNode";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
@@ -133,13 +132,11 @@ const BoardContent = () => {
           y: position.y - 25,
         };
 
-        useTaskStore
-          .getState()
-          .addChild(
-            connectionNodeId.current,
-            { type: "idea" },
-            adjustedPosition,
-          );
+        useTaskStore.getState().createNode({
+          parentId: connectionNodeId.current,
+          initialData: { type: "idea" },
+          position: adjustedPosition,
+        });
       }
     }
 

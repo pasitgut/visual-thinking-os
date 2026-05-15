@@ -14,7 +14,7 @@ export const MobileNodeActions = () => {
   const {
     nodes,
     deleteNode,
-    addChild,
+    createNode,
     updateNodeType,
     updateNodeColor,
     toggleNodePin,
@@ -28,7 +28,7 @@ export const MobileNodeActions = () => {
   const nodeColor = node.data.color || "default";
 
   const handleAddChild = () => {
-    addChild(node.id);
+    createNode({ parentId: node.id });
     setBottomSheetOpen(false);
   };
 

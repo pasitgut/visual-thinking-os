@@ -32,7 +32,7 @@ import { useTaskStore } from "@/stores/useTaskStore";
 const DndHandler = ({ children }: { children: React.ReactNode }) => {
   const { screenToFlowPosition } = useReactFlow();
   const { removeItem } = useInboxStore();
-  const { addTask, updateNodeTitle } = useTaskStore();
+  const { createNode, updateNodeTitle } = useTaskStore();
   const { isTablet } = useDeviceSpec();
   const [activeItem, setActiveItem] = useState<{
     id: string;
@@ -95,7 +95,10 @@ const DndHandler = ({ children }: { children: React.ReactNode }) => {
       });
 
       // Create node at drop coordinates
-      addTask({ status: "todo", type: "idea", title: text }, position);
+      createNode({
+        initialData: { status: "todo", type: "idea", title: text },
+        position,
+      });
 
       await removeItem(id);
     }

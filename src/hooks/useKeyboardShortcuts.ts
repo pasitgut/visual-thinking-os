@@ -5,8 +5,7 @@ import { useTaskStore } from "@/stores/useTaskStore";
 export const useKeyboardShortcuts = () => {
   const {
     selectedNodeIds,
-    addChild,
-    addSibling,
+    createNode,
     deleteNode,
     deleteEdges,
     saveToFirestore,
@@ -100,7 +99,7 @@ export const useKeyboardShortcuts = () => {
         if (event.key === "Tab" && !event.shiftKey) {
           event.preventDefault();
           const parentNode = nodes.find((n) => n.id === selectedId);
-          addChild(selectedId);
+          createNode({ parentId: selectedId });
 
           setTimeout(() => {
             const state = useTaskStore.getState();
@@ -123,9 +122,9 @@ export const useKeyboardShortcuts = () => {
         if (event.key === "Enter") {
           event.preventDefault();
           if (selectedId === "root") {
-            addChild(selectedId);
+            createNode({ parentId: selectedId });
           } else {
-            addSibling(selectedId);
+            createNode({ siblingId: selectedId });
           }
 
           setTimeout(() => {
@@ -221,8 +220,7 @@ export const useKeyboardShortcuts = () => {
     },
     [
       selectedNodeIds,
-      addChild,
-      addSibling,
+      createNode,
       deleteNode,
       deleteEdges,
       saveToFirestore,

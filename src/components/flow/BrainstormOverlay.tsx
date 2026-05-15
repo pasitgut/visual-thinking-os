@@ -13,13 +13,8 @@ import { useEffect, useRef, useState } from "react";
 import { useTaskStore } from "@/stores/useTaskStore";
 
 export const BrainstormOverlay = () => {
-  const {
-    interactionMode,
-    setInteractionMode,
-    addTask,
-    addChild,
-    selectedNodeIds,
-  } = useTaskStore();
+  const { interactionMode, setInteractionMode, createNode, selectedNodeIds } =
+    useTaskStore();
 
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -62,9 +57,12 @@ export const BrainstormOverlay = () => {
     if (!title) return;
 
     if (selectedNodeIds.length === 1) {
-      addChild(selectedNodeIds[0], { title, type: "idea" });
+      createNode({
+        parentId: selectedNodeIds[0],
+        initialData: { title, type: "idea" },
+      });
     } else {
-      addTask({ title, type: "idea" });
+      createNode({ initialData: { title, type: "idea" } });
     }
 
     setInputValue("");

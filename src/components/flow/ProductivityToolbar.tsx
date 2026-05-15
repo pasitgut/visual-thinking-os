@@ -27,7 +27,7 @@ export const ProductivityToolbar = () => {
   const {
     applyLayout,
     createRootTask,
-    addTask,
+    createNode,
     nodes,
     interactionMode,
     setInteractionMode,
@@ -46,7 +46,7 @@ export const ProductivityToolbar = () => {
         x: window.innerWidth / 2,
         y: window.innerHeight / 2,
       });
-      addTask({ status: "todo" }, center);
+      createNode({ initialData: { status: "todo" }, position: center });
     }
   };
 
