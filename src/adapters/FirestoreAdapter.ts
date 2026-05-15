@@ -1,26 +1,17 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import type { Edge } from "reactflow";
 import { db } from "@/lib/firebase/firestore";
-import type { TaskNode } from "@/types/task";
-
-export interface BoardData {
-  nodes: TaskNode[];
-  edges: Edge[];
-  updatedAt: number;
-}
+import type { BoardData, IRemoteAdapter } from "@/sync/types";
 
 /**
- * Recursively removes any functions or undefined values from an object to make it Firestore-serializable.
+ * Strips functions and undefined values for Firestore compatibility.
  */
 const cleanData = (obj: any): any => {
   if (obj === null || typeof obj !== "object") {
     return obj === undefined ? null : obj;
   }
-
   if (Array.isArray(obj)) {
     return obj.map(cleanData);
   }
-
   const result: any = {};
   for (const key in obj) {
     const value = obj[key];
@@ -31,27 +22,22 @@ const cleanData = (obj: any): any => {
   return result;
 };
 
-export const BoardService = {
-  saveBoard: async (userId: string, nodes: TaskNode[], edges: Edge[]) => {
-    // We strip all function callbacks and undefined values from node/edge data before saving to Firestore
-    const serializableNodes = nodes.map((node) => cleanData(node));
-    const serializableEdges = edges.map((edge) => cleanData(edge));
-
+export class FirestoreAdapter implements IRemoteAdapter {
+  async push(userId: string, data: BoardData): Promise<void> {
+    const serializable = cleanData(data);
     const boardRef = doc(db, "boards", userId);
     await setDoc(boardRef, {
-      nodes: serializableNodes,
-      edges: serializableEdges,
+      ...serializable,
       updatedAt: Date.now(),
     });
-  },
+  }
 
-  loadBoard: async (userId: string): Promise<BoardData | null> => {
+  async pull(userId: string): Promise<BoardData | null> {
     const boardRef = doc(db, "boards", userId);
     const boardSnap = await getDoc(boardRef);
-
     if (boardSnap.exists()) {
       return boardSnap.data() as BoardData;
     }
     return null;
-  },
-};
+  }
+}

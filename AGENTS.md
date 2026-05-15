@@ -12,7 +12,12 @@
     - **Memoized Graph Projections**: Visibility filters, focus modes, and progressive exploration logic are fully memoized to prevent O(N) recalculation storms.
     - **Dynamic Detail Culling**: Nodes automatically switch to lightweight "macro" representations at high zoom levels to maintain high frame rates in large graphs.
 - **Persistence Optimization**:
-    - **Optimized Firestore Sync**: Debounced (5s) background serialization reduces the impact of auto-saving on interaction latency.
+    - **Optimized Firestore Sync**: Debounced (5s) background serialization handled by the Sync Layer to reduce impact on interaction latency.
+- **Local-First Architecture**:
+    - **UI Separation**: UI components must only interact with the Zustand store.
+    - **Store Persistence**: Zustand store delegates all data persistence and sync tasks to the `TaskRepository`.
+    - **Infrastructure Boundary**: Direct Firestore access is restricted to the `FirestoreAdapter`. No direct `firebase/firestore` imports allowed in components or stores.
+    - **Atomic Writes**: All data mutations must go through the Repository to ensure consistent local-then-remote updates.
 
 The product combines:
 - visual mindmapping
@@ -271,6 +276,10 @@ Do NOT build initially:
 ```txt
 src/
 ├── app/             # App Router pages, metadata, and Service Worker (sw.ts)
+├── sync/            # Sync Layer orchestration
+├── persistence/     # Local Persistence implementations
+├── repositories/    # Domain Repositories (ITaskRepository)
+├── adapters/        # Infrastructure Adapters (FirestoreAdapter)
 ├── components/
 │   ├── ui/          # shadcn components
 │   ├── flow/        # React Flow containers & toolbars
