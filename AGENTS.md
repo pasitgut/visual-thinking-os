@@ -3,6 +3,7 @@
 ## Performance & Optimization Standards
 
 - **60fps Interaction Lifecycle**:
+    - **Spatial Physics Engine**: Continuous smooth node collision resolution and magnetic alignment via `requestAnimationFrame` loop.
     - **Throttled Handle Updates**: Edge handle recalculations are throttled (32ms) during active dragging to prioritize movement smoothness.
     - **Subtree Drag Optimization**: Smart subtree position updates only calculate when active movement is detected, minimizing CPU overhead.
     - **Filter Culling**: GPU-heavy effects (blur, grayscale) are automatically disabled during active dragging and at macro zoom levels.
@@ -187,6 +188,11 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
 - **Descendant Badge**: Visual indicators (e.g., `+5`) on collapsed nodes to show hidden content scale.
 - **Smart Framing**: Automatically centers viewport on the centroid of parent and child during creation to preserve visual context.
 - **Creation Focus**: Automatically centers viewport on newly created nodes to maintain workflow continuity.
+- **Smooth Node Collision & Magnetic Spacing**:
+    - **Smooth Collision**: Dragging nodes smoothly pushes overlapping neighbors away using directional push vectors and lerp interpolation.
+    - **Magnetic Alignment**: Nodes softly attract toward clean alignment axes (horizontal/vertical) when close to each other.
+    - **Intelligent Spacing**: Automatically maintains preferred gaps (120px) between nodes for a clean, readable layout without hard snapping.
+    - **Physics-Based Motion**: Uses damping and friction-based smoothing for a premium, physically believable feel.
 - **Graph Integrity**: Prevention of self-connecting loops to ensure data structure validity.
 - **Color Inheritance**: Children automatically inherit parent colors for semantic consistency.
 - **Inline Editing UX**: Auto-resizing textareas, instant focus on creation, and cursor stability.
