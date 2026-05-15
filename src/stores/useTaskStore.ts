@@ -67,16 +67,13 @@ interface TaskState {
   setSelectedNodeIds: (ids: string[]) => void;
   setEditingNodeId: (id: string | null) => void;
   setSearchOpen: (open: boolean) => void;
-  addChild: (
-    parentId: string,
-    initialData?: Partial<TaskNodeData>,
-    position?: { x: number; y: number },
-  ) => void;
-  addSibling: (nodeId: string) => void;
-  addTask: (
-    initialData?: Partial<TaskNodeData>,
-    position?: { x: number; y: number },
-  ) => void;
+  createNode: (params?: {
+    parentId?: string;
+    siblingId?: string;
+    initialData?: Partial<TaskNodeData>;
+    position?: { x: number; y: number };
+    skipFocus?: boolean;
+  }) => void;
   deleteNode: (id: string) => void;
   deleteEdges: (ids: string[]) => void;
   updateNodeData: (id: string, data: Partial<TaskNodeData>) => void;
@@ -540,22 +537,48 @@ export const useTaskStore = create<TaskState>()(
           debouncedSave(userId, get().nodes, get().edges);
         },
 
-        addChild: (
-          parentId: string,
-          initialData?: Partial<TaskNodeData>,
-          positionOverride?: { x: number; y: number },
-        ) => {
-          const parentNode = get().nodes.find((n) => n.id === parentId);
-          if (!parentNode) return;
+        createNode: (params = {}) => {
+          const {
+            parentId: explicitParentId,
+            siblingId,
+            initialData,
+            position: posOverride,
+          } = params;
+
+          let resolvedParentId = explicitParentId;
+          if (siblingId) {
+            if (siblingId === "root") return;
+            const parentEdge = get().edges.find((e) => e.target === siblingId);
+            if (parentEdge) {
+              resolvedParentId = parentEdge.source;
+            }
+          }
+
+          const nodes = get().nodes;
+          const edges = get().edges;
+          const parentNode = resolvedParentId
+            ? nodes.find((n) => n.id === resolvedParentId)
+            : undefined;
 
           const newNodeId = uuidv4();
-          const depth = (parentNode.data.depth ?? 0) + 1;
-          const parentColor = parentNode.data.color;
-          const color =
-            parentColor && parentColor !== "default" ? parentColor : "default";
-          const position =
-            positionOverride ||
-            getIncrementalPosition(parentNode, get().nodes, get().edges);
+          let depth = 0;
+          let color: TaskColor = "default";
+          let position = posOverride || {
+            x: (Math.random() - 0.5) * 400,
+            y: (Math.random() - 0.5) * 400,
+          };
+
+          if (parentNode) {
+            depth = (parentNode.data.depth ?? 0) + 1;
+            const parentColor = parentNode.data.color;
+            color =
+              parentColor && parentColor !== "default"
+                ? parentColor
+                : "default";
+            if (!posOverride) {
+              position = getIncrementalPosition(parentNode, nodes, edges);
+            }
+          }
 
           const newNode: TaskNode = {
             id: newNodeId,
@@ -577,104 +600,64 @@ export const useTaskStore = create<TaskState>()(
             },
           };
 
-          const bestHandles = calculateBestHandles(parentNode, newNode);
-          const newEdge: Edge = {
-            id: `e-${parentId}-${newNodeId}`,
-            source: parentId,
-            target: newNodeId,
-            sourceHandle: bestHandles.sourceHandle,
-            targetHandle: bestHandles.targetHandle,
-            data: { type: "related" },
-          };
+          let newEdge: Edge | null = null;
+          let nextNodes: TaskNode[] = [];
 
-          const nextNodes = get()
-            .nodes.map((n) =>
-              n.id === parentId
+          if (parentNode) {
+            const bestHandles = calculateBestHandles(parentNode, newNode);
+            newEdge = {
+              id: `e-${parentNode.id}-${newNodeId}`,
+              source: parentNode.id,
+              target: newNodeId,
+              sourceHandle: bestHandles.sourceHandle,
+              targetHandle: bestHandles.targetHandle,
+              data: { type: "related" },
+            };
+
+            nextNodes = nodes.map((n) =>
+              n.id === parentNode.id
                 ? {
                     ...n,
                     data: { ...n.data, isCollapsed: false },
                     selected: false,
                   }
                 : { ...n, selected: false },
-            )
-            .concat({ ...newNode, selected: true });
-
-          set({
-            nodes: nextNodes,
-            edges: [...get().edges, newEdge],
-            selectedNodeIds: [newNodeId],
-            editingNodeId: initialData?.title ? null : newNodeId,
-          });
-
-          const { focusRootId, edges, pushFocusRootId } = get();
-          let relativeDepth = 0;
-          let currId = parentId;
-          while (currId && currId !== focusRootId) {
-            const edge = edges.find(
-              (e) =>
-                e.target === currId &&
-                (e.data?.type === "hierarchy" || e.data?.type === "related"),
             );
-            if (!edge) break;
-            currId = edge.source;
-            relativeDepth++;
+          } else {
+            nextNodes = nodes.map((n) => ({ ...n, selected: false }));
           }
 
-          if (relativeDepth === 2) {
-            pushFocusRootId(parentId);
-          }
+          nextNodes = nextNodes.concat({ ...newNode, selected: true });
+          const nextEdges = newEdge ? [...edges, newEdge] : edges;
 
-          get().saveToFirestore();
-        },
-
-        addSibling: (nodeId: string) => {
-          if (nodeId === "root") return;
-          const parentEdge = get().edges.find((e) => e.target === nodeId);
-          if (!parentEdge) {
-            get().addTask();
-            return;
-          }
-          get().addChild(parentEdge.source);
-        },
-
-        addTask: (
-          initialData?: Partial<TaskNodeData>,
-          position?: { x: number; y: number },
-        ) => {
-          const newNodeId = uuidv4();
-
-          const newNode: TaskNode = {
-            id: newNodeId,
-            type: "task",
-            position: position || {
-              x: (Math.random() - 0.5) * 400,
-              y: (Math.random() - 0.5) * 400,
-            },
-            data: {
-              title: "",
-              status: "todo",
-              depth: 0,
-              type: "idea",
-              color: "default",
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-              deadline: "No deadline",
-              isImportant: false,
-              isPinned: false,
-              isCollapsed: false,
-              ...initialData,
-            },
-          };
-
-          const nextNodes = get()
-            .nodes.map((n) => ({ ...n, selected: false }))
-            .concat({ ...newNode, selected: true });
+          const shouldFocus = !params.skipFocus && !initialData?.title;
 
           set({
             nodes: nextNodes,
+            edges: nextEdges,
             selectedNodeIds: [newNodeId],
-            editingNodeId: initialData?.title ? null : newNodeId,
+            editingNodeId: shouldFocus ? newNodeId : null,
           });
+
+          if (parentNode) {
+            const { focusRootId, pushFocusRootId } = get();
+            let relativeDepth = 0;
+            let currId = parentNode.id;
+            while (currId && currId !== focusRootId) {
+              const edge = nextEdges.find(
+                (e) =>
+                  e.target === currId &&
+                  (e.data?.type === "hierarchy" || e.data?.type === "related"),
+              );
+              if (!edge) break;
+              currId = edge.source;
+              relativeDepth++;
+            }
+
+            if (relativeDepth === 2) {
+              pushFocusRootId(parentNode.id);
+            }
+          }
 
           get().saveToFirestore();
         },

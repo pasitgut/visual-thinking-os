@@ -105,7 +105,7 @@ export const TaskNode = memo(
     const pushFocusRootId = useTaskStore((s) => s.pushFocusRootId);
     const updateNodeData = useTaskStore((s) => s.updateNodeData);
     const deleteNode = useTaskStore((s) => s.deleteNode);
-    const addChild = useTaskStore((s) => s.addChild);
+    const createNode = useTaskStore((s) => s.createNode);
     const toggleNodeCollapse = useTaskStore((s) => s.toggleNodeCollapse);
     const toggleNodePin = useTaskStore((s) => s.toggleNodePin);
 
@@ -230,12 +230,14 @@ export const TaskNode = memo(
       if (isMobile) setInteractionState("node-selected");
 
       const trimmedTitle = title.trim();
-      if (trimmedTitle !== "" && trimmedTitle !== data.title) {
-        updateNodeData(id, { title: trimmedTitle });
-      } else if (trimmedTitle === "" && data.title === "") {
-        updateNodeData(id, { title: "Untitled" });
+      if (trimmedTitle !== "") {
+        if (trimmedTitle !== data.title) {
+          updateNodeData(id, { title: trimmedTitle });
+        }
       } else {
-        setTitle(data.title);
+        // If empty, always set to Untitled if it wasn't already something else
+        updateNodeData(id, { title: "Untitled" });
+        setTitle("Untitled");
       }
     };
 
@@ -579,7 +581,7 @@ export const TaskNode = memo(
                 isPinned={data.isPinned}
                 isImportant={isImportant}
                 deadline={deadline}
-                onAddChild={() => addChild(id)}
+                onAddChild={() => createNode({ parentId: id })}
                 onDelete={() => deleteNode(id)}
                 onTypeChange={(t) => updateNodeData(id, { type: t })}
                 onColorChange={(c) => updateNodeData(id, { color: c })}

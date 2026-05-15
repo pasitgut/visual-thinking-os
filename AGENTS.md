@@ -168,7 +168,11 @@ The long-term goal is to create a calm, spatial, and cognitively ergonomic produ
     - **Flicker Animation**: Dynamic CSS-driven jitter and scale shifts (`flame-flicker`) mimic real fire behavior.
     - **Zoom-Aware Efficiency**: Effects automatically dim and scale down during macro-zoom to preserve GPU performance and clarity.
     - **Motion Safety**: Respects `prefers-reduced-motion` settings.
-- **Auto-Node Creation**: Dragging a connection from a node and dropping it onto the empty canvas automatically creates a new **Idea** node, connects it with a **Related** edge, and immediately focuses the title for editing.
+- **Unified Node Creation Service**: A centralized `createNode` service in the store handles all creation pathways (Toolbar, Keyboard, Drag-and-Drop, Edge-Drag).
+    - **Consistent Creation UX**: Every new node automatically receives text focus (`editingNodeId`) and centers the viewport.
+    - **Smart Auto-Focus**: Intelligently skips auto-focus if a title is already provided (e.g., during Brainstorming or processing from Inbox) to maintain flow.
+    - **Standardized Fallback**: New nodes default to "Untitled" if blurred without entering text, ensuring no empty nodes exist.
+- **Auto-Node Creation**: Dragging a connection from a node and dropping it onto the empty canvas automatically creates a new **Idea** node via the unified service.
 - **Structural Relationship Hierarchy**: Both `Hierarchy` (Subtask) and `Related` edges are treated as structural connections for progressive exploration, branch collapse, and navigation.
 - **Global Edge Default**: New connections default to **Related** type.
 - **Subtree Dragging**: Moving a parent node automatically moves its entire descendant tree, preserving branch-specific mental geography. Independent of edge relationship types.

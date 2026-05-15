@@ -18,8 +18,7 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
   const { items, isOpen, setOpen, removeItem, loadInbox, isLoading } =
     useInboxStore();
 
-  const { addTask, addChild, selectedNodeIds } =
-    useTaskStore();
+  const { createNode, selectedNodeIds } = useTaskStore();
 
   useEffect(() => {
     const userId = (window as unknown as { userId: string }).userId;
@@ -31,9 +30,14 @@ export const InboxPanel = ({ variant = "drawer" }: InboxPanelProps) => {
   const handleProcessItem = async (id: string, text: string) => {
     // Process: Convert to node
     if (selectedNodeIds.length === 1) {
-      addChild(selectedNodeIds[0], { type: "idea", title: text });
+      createNode({
+        parentId: selectedNodeIds[0],
+        initialData: { type: "idea", title: text },
+      });
     } else {
-      addTask({ status: "todo", type: "idea", title: text });
+      createNode({
+        initialData: { status: "todo", type: "idea", title: text },
+      });
     }
 
     // Remove from inbox after processing
