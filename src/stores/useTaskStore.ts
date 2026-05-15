@@ -24,6 +24,7 @@ import { getLayoutedElements } from "@/lib/reactflow/layoutUtils";
 import {
   getIncrementalPosition,
   reconcileLayout,
+  spatialEngine,
 } from "@/lib/reactflow/spatialEngine";
 import { BoardService } from "@/services/boardService";
 import type {
@@ -38,6 +39,8 @@ import type {
   ViewType,
 } from "@/types/task";
 import { useAuthStore } from "./useAuthStore";
+
+let physicsLoopId: number | null = null;
 
 interface TaskState {
   nodes: TaskNode[];
@@ -55,6 +58,7 @@ interface TaskState {
   isLoading: boolean;
   saveStatus: "saved" | "saving" | "error";
   viewport: Viewport;
+  draggingNodeId: string | null;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
@@ -66,7 +70,10 @@ interface TaskState {
   popFocusRootId: () => void;
   setSelectedNodeIds: (ids: string[]) => void;
   setEditingNodeId: (id: string | null) => void;
+  setDraggingNodeId: (id: string | null) => void;
   setSearchOpen: (open: boolean) => void;
+  startPhysicsLoop: () => void;
+  stopPhysicsLoop: () => void;
   createNode: (params?: {
     parentId?: string;
     siblingId?: string;
@@ -178,6 +185,7 @@ export const useTaskStore = create<TaskState>()(
         isLoading: true,
         saveStatus: "saved",
         viewport: { x: 0, y: 0, zoom: 1 },
+        draggingNodeId: null,
 
         setView: (view: ViewType) => set({ currentView: view }),
         setInteractionMode: (mode: InteractionMode) =>
@@ -211,6 +219,26 @@ export const useTaskStore = create<TaskState>()(
         onNodesChange: (changes: NodeChange[]) => {
           const currentNodes = get().nodes;
           const currentEdges = get().edges;
+          const draggingId = get().draggingNodeId;
+
+          // Identify dragging state changes
+          const dragChange = changes.find(
+            (c) => c.type === "position" && (c as any).dragging,
+          ) as any;
+
+          if (dragChange && dragChange.id !== draggingId) {
+            set({ draggingNodeId: dragChange.id });
+            spatialEngine.updateDimensions(currentNodes);
+            get().startPhysicsLoop();
+          } else if (!dragChange && draggingId) {
+            // Check if user stopped dragging
+            const isAnyDragging = changes.some(
+              (c) => c.type === "position" && (c as any).dragging,
+            );
+            if (!isAnyDragging) {
+              set({ draggingNodeId: null });
+            }
+          }
 
           let updatedNodes = [...currentNodes];
           const positionChanges = changes.filter(
@@ -369,6 +397,45 @@ export const useTaskStore = create<TaskState>()(
 
         setEditingNodeId: (id: string | null) => {
           set({ editingNodeId: id });
+        },
+
+        setDraggingNodeId: (id: string | null) => {
+          set({ draggingNodeId: id });
+        },
+
+        startPhysicsLoop: () => {
+          if (physicsLoopId !== null) return;
+
+          const step = () => {
+            const state = get();
+            const { nodes, edges, draggingNodeId } = state;
+            
+            // Step the spatial engine
+            const nextNodes = spatialEngine.step(nodes, draggingNodeId);
+            
+            if (nextNodes !== nodes) {
+              set({ nodes: nextNodes });
+              throttledUpdateHandles(nextNodes, edges);
+              get().saveToFirestore();
+            }
+
+            // Only stop if not dragging AND physics has settled
+            if (get().draggingNodeId === null && spatialEngine.isIdle()) {
+              physicsLoopId = null;
+              return;
+            }
+
+            physicsLoopId = requestAnimationFrame(step);
+          };
+
+          physicsLoopId = requestAnimationFrame(step);
+        },
+
+        stopPhysicsLoop: () => {
+          if (physicsLoopId !== null) {
+            cancelAnimationFrame(physicsLoopId);
+            physicsLoopId = null;
+          }
         },
 
         initialize: async (userId: string) => {
