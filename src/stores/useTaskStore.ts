@@ -26,7 +26,7 @@ import {
   reconcileLayout,
   spatialEngine,
 } from "@/lib/reactflow/spatialEngine";
-import { BoardService } from "@/services/boardService";
+import { taskRepository, syncService, firestoreAdapter } from "@/sync/registry";
 import type {
   InteractionMode,
   RelationshipType,
@@ -130,13 +130,21 @@ export const useTaskStore = create<TaskState>()(
     (set, get) => {
       const getUserId = () => useAuthStore.getState().user?.uid;
 
+      // Listen to sync status changes from the sync layer
+      syncService.onStatusChange((status) => {
+        set({ saveStatus: status });
+      });
+
       const debouncedSave = debounce(
         async (userId: string, nodes: TaskNode[], edges: Edge[]) => {
           try {
-            await BoardService.saveBoard(userId, nodes, edges);
-            set({ saveStatus: "saved" });
+            await taskRepository.saveBoard(userId, {
+              nodes,
+              edges,
+              updatedAt: Date.now(),
+            });
           } catch (error) {
-            console.error("Failed to save board:", error);
+            console.error("Failed to save board through repository:", error);
             set({ saveStatus: "error" });
           }
         },
@@ -441,7 +449,18 @@ export const useTaskStore = create<TaskState>()(
         initialize: async (userId: string) => {
           set({ isLoading: true });
           try {
-            const board = await BoardService.loadBoard(userId);
+            // 1. Try Local-First repository
+            let board = await taskRepository.getBoard(userId);
+            
+            // 2. Fallback to Remote pull if local is empty
+            if (!board) {
+              board = await firestoreAdapter.pull(userId);
+              if (board) {
+                // Seed local cache
+                await taskRepository.saveBoard(userId, board);
+              }
+            }
+
             if (board) {
               set({
                 nodes: wireData(board.nodes),
@@ -470,12 +489,14 @@ export const useTaskStore = create<TaskState>()(
           if (now - lastRetry < 5000) return;
           (window as any).lastRetryTime = now;
 
-          set({ saveStatus: "saving" });
           try {
-            await BoardService.saveBoard(userId, get().nodes, get().edges);
-            set({ saveStatus: "saved" });
+            await syncService.sync(userId, {
+              nodes: get().nodes,
+              edges: get().edges,
+              updatedAt: Date.now(),
+            });
           } catch (_error) {
-            set({ saveStatus: "error" });
+            // Error handled by status listener
           }
         },
 
