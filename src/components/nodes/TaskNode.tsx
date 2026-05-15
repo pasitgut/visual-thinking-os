@@ -438,7 +438,7 @@ export const TaskNode = memo(
                       "text-amber-900 dark:text-amber-100 font-bold",
                   )}
                 >
-                  {data.title || "New Node"}
+                  {data.title || "Untitled"}
                 </div>
               )}
 
