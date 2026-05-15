@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, Plus, Search, Zap } from "lucide-react";
+import { Inbox, Search, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useInboxStore } from "@/stores/useInboxStore";

@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Command,
-  Inbox,
-  LayoutGrid,
-  Maximize,
-  Plus,
-  Search,
-  Zap,
-} from "lucide-react";
+import { Command, LayoutGrid, Maximize, Plus, Search, Zap } from "lucide-react";
 import { useReactFlow } from "reactflow";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";

@@ -9,7 +9,7 @@ export const calculateBestHandles = (
   sourceNode: Node,
   targetNode: Node,
   currentSourceHandle?: string | null,
-  currentTargetHandle?: string | null,
+  _currentTargetHandle?: string | null,
 ): { sourceHandle: string; targetHandle: string } => {
   const sourcePos = sourceNode.position;
   const targetPos = targetNode.position;

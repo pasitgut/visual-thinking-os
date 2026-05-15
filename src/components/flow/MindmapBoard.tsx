@@ -7,15 +7,12 @@ import ReactFlow, {
   Controls,
   MarkerType,
   MiniMap,
-  ReactFlowProvider,
   useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
 import { useDroppable } from "@dnd-kit/core";
-import { v4 as uuidv4 } from "uuid";
 import { RelationshipEdge } from "@/components/flow/RelationshipEdge";
-import { MobileNodeActions } from "@/components/mobile/MobileNodeActions";
 import { TaskNode } from "@/components/nodes/TaskNode";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -76,9 +73,9 @@ const BoardContent = () => {
     if (persistedViewport && persistedViewport.zoom > 0) {
       setViewport(persistedViewport);
     }
-  }, [setViewport]); // Run once on mount
+  }, [setViewport, persistedViewport]); // Run once on mount
 
-  const onMoveEndInternal = (event: any, viewport: any) => {
+  const onMoveEndInternal = (_event: any, viewport: any) => {
     setPersistedViewport(viewport);
     if (isMobile) {
       setInteractionState(
@@ -387,7 +384,7 @@ const BoardContent = () => {
     return () => {
       if (fitViewTimerRef.current) clearTimeout(fitViewTimerRef.current);
     };
-  }, [isTablet, fitView, isMobile]); // Removed nodes.length to avoid global fitView on add
+  }, [isTablet, fitView, isMobile, nodes.length]); // Removed nodes.length to avoid global fitView on add
 
   // 4.2 Creation Focus: Focus on newly created nodes
   const prevNodesCount = useRef(nodes.length);

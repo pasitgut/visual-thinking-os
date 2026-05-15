@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, Maximize, Search, Zap, ZoomIn, ZoomOut } from "lucide-react";
+import { Inbox, Search, Zap, ZoomIn, ZoomOut } from "lucide-react";
 import { useReactFlow } from "reactflow";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

@@ -4,7 +4,6 @@ import { Home } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useReactFlow, useStore } from "reactflow";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export const RootIndicator = () => {
   const [isVisible, setIsVisible] = useState(false);

@@ -404,7 +404,7 @@ export const useTaskStore = create<TaskState>()(
           try {
             await BoardService.saveBoard(userId, get().nodes, get().edges);
             set({ saveStatus: "saved" });
-          } catch (error) {
+          } catch (_error) {
             set({ saveStatus: "error" });
           }
         },

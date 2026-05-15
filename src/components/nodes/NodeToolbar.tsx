@@ -9,7 +9,6 @@ import {
   Target,
   Trash2,
 } from "lucide-react";
-import { useRef } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
