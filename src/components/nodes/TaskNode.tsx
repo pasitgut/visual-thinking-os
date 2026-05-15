@@ -183,26 +183,26 @@ export const TaskNode = memo(
       if (isEditing) {
         const focusInput = () => {
           if (textareaRef.current) {
-            textareaRef.current.focus();
+            // preventScroll: true is critical for smooth transitions during zoom/pan
+            textareaRef.current.focus({ preventScroll: true });
             textareaRef.current.select();
             // Adjust height to content
             textareaRef.current.style.height = "auto";
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-            return true;
           }
-          return false;
         };
 
-        // Try immediately
-        if (!focusInput()) {
-          // If not ready, retry with RAF and a short timeout
-          const rafId = requestAnimationFrame(() => focusInput());
-          const timeoutId = setTimeout(focusInput, 100);
-          return () => {
-            cancelAnimationFrame(rafId);
-            clearTimeout(timeoutId);
-          };
-        }
+        // 1. Try immediately for fast updates
+        focusInput();
+
+        // 2. Queue in macro-task to definitively win over React Flow's selection focus
+        const t1 = setTimeout(focusInput, 50);
+        const t2 = setTimeout(focusInput, 200);
+
+        return () => {
+          clearTimeout(t1);
+          clearTimeout(t2);
+        };
       }
     }, [isEditing]);
 
@@ -296,6 +296,7 @@ export const TaskNode = memo(
         },
         onBlur: handleSave,
         onKeyDown: onKeyDown,
+        onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
         className:
           "h-auto py-0 px-0 focus-visible:ring-0 border-none shadow-none bg-transparent w-full text-inherit resize-none overflow-hidden outline-none",
       };
@@ -326,6 +327,7 @@ export const TaskNode = memo(
               {isEditing ? (
                 <textarea
                   {...commonTextareaProps}
+                  autoFocus
                   className={cn(
                     commonTextareaProps.className,
                     "text-xl font-black placeholder:text-white/50",
@@ -417,6 +419,7 @@ export const TaskNode = memo(
               {isEditing ? (
                 <textarea
                   {...commonTextareaProps}
+                  autoFocus
                   className={cn(
                     commonTextareaProps.className,
                     "text-sm font-semibold",

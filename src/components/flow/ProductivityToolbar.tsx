@@ -30,7 +30,8 @@ export const ProductivityToolbar = () => {
     fitView({ padding: 0.2, duration: 800 });
   };
 
-  const handleAddAction = () => {
+  const handleAddAction = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (nodes.length === 0) {
       createRootTask();
     } else {
@@ -58,11 +59,12 @@ export const ProductivityToolbar = () => {
                 interactionMode === "brainstorm" &&
                   "bg-primary text-primary-foreground shadow-md scale-105",
               )}
-              onClick={() =>
+              onClick={(e) => {
+                e.stopPropagation();
                 setInteractionMode(
                   interactionMode === "brainstorm" ? "standard" : "brainstorm",
-                )
-              }
+                );
+              }}
             >
               <Zap
                 className={cn(
@@ -95,7 +97,10 @@ export const ProductivityToolbar = () => {
                 buttonVariants({ variant: "ghost", size: "icon" }),
                 "h-8 w-8 cursor-pointer",
               )}
-              onClick={() => useTaskStore.getState().setSearchOpen(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                useTaskStore.getState().setSearchOpen(true);
+              }}
             >
               <Search className="h-3.5 w-3.5" />
             </TooltipTrigger>

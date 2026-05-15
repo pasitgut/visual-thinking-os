@@ -129,11 +129,17 @@ const BoardContent = () => {
           y: position.y - 25,
         };
 
-        useTaskStore.getState().createNode({
-          parentId: connectionNodeId.current,
-          initialData: { type: "idea" },
-          position: adjustedPosition,
-        });
+        const parentId = connectionNodeId.current;
+
+        // Use a small timeout to ensure the node creation happens after any 
+        // potential pane click events that might clear the focus
+        setTimeout(() => {
+          useTaskStore.getState().createNode({
+            parentId,
+            initialData: { type: "idea" },
+            position: adjustedPosition,
+          });
+        }, 50);
       }
     }
 
@@ -384,7 +390,7 @@ const BoardContent = () => {
     return () => {
       if (fitViewTimerRef.current) clearTimeout(fitViewTimerRef.current);
     };
-  }, [isTablet, fitView, isMobile, nodes.length]); // Removed nodes.length to avoid global fitView on add
+  }, [isTablet, fitView, isMobile]); // Removed nodes.length to avoid global fitView on add
 
   // 4.2 Creation Focus: Focus on newly created nodes
   const prevNodesCount = useRef(nodes.length);
@@ -430,7 +436,9 @@ const BoardContent = () => {
           if (event.detail === 2) {
             handlePaneDoubleClick();
           }
-          useTaskStore.getState().setSelectedNodeIds([]);
+          const state = useTaskStore.getState();
+          state.setSelectedNodeIds([]);
+          state.setEditingNodeId(null);
           if (isMobile) {
             setInteractionState("idle");
             setSelectedNodeId(null);

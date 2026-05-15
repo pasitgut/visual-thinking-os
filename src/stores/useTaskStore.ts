@@ -270,11 +270,14 @@ export const useTaskStore = create<TaskState>()(
                 nodes: finalNodes,
                 edges: finalEdges,
                 selectedNodeIds: selectedIds,
-                editingNodeId:
-                  selectedIds.length === 0 ? null : get().editingNodeId,
+                editingNodeId: get().editingNodeId,
               });
             } else {
-              set({ nodes: finalNodes, edges: finalEdges });
+              set({
+                nodes: finalNodes,
+                edges: finalEdges,
+                editingNodeId: get().editingNodeId,
+              });
             }
           }
 
