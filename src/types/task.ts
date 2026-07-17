@@ -10,7 +10,21 @@ export type TaskType =
   | "problem"
   | "decision"
   | "question"
-  | "reference";
+  | "reference"
+  | "empathize"
+  | "define"
+  | "ideate"
+  | "prototype"
+  | "test"
+  | "claim"
+  | "premise"
+  | "evidence"
+  | "assumption"
+  | "objection"
+  | "fallacy"
+  | "stock"
+  | "flow"
+  | "variable";
 
 export type InteractionMode = "standard" | "brainstorm";
 export type TaskColor =
@@ -26,7 +40,12 @@ export type RelationshipType =
   | "related"
   | "depends_on"
   | "blocks"
-  | "inspired_by";
+  | "inspired_by"
+  | "supports"
+  | "refutes"
+  | "assumes_dep"
+  | "positive_influence"
+  | "negative_influence";
 
 export type ViewType = "mindmap" | "kanban";
 
@@ -62,6 +81,9 @@ export interface TaskNodeData {
   isCollapsed?: boolean;
   deadline?: string;
   isImportant?: boolean;
+  initialValue?: number;
+  flowRate?: number;
+  loopType?: "R" | "B";
 }
 
 export interface TaskEdgeData {

@@ -105,6 +105,9 @@ interface TaskState {
   retrySync: () => Promise<void>;
   createRootTask: () => void;
   createExampleBoard: () => void;
+  createDesignThinkingBoard: () => void;
+  createCriticalThinkingBoard: () => void;
+  createSystemsThinkingBoard: () => void;
   saveToFirestore: () => void;
   applyLayout: () => void;
   selectNode: (id: string) => void;
@@ -615,6 +618,443 @@ export const useTaskStore = create<TaskState>()(
           set({
             nodes: wireData(exampleNodes),
             edges: exampleEdges,
+            isLoading: false,
+          });
+          setTimeout(() => get().applyLayout(), 100);
+          get().saveToFirestore();
+        },
+
+        createDesignThinkingBoard: () => {
+          const rootId = "root";
+          const eId = uuidv4();
+          const dId = uuidv4();
+          const iId = uuidv4();
+          const pId = uuidv4();
+          const tId = uuidv4();
+
+          const cE1 = uuidv4();
+          const cE2 = uuidv4();
+          const cD1 = uuidv4();
+          const cI1 = uuidv4();
+          const cP1 = uuidv4();
+          const cT1 = uuidv4();
+
+          const nodes: TaskNode[] = [
+            {
+              id: rootId,
+              type: "task",
+              position: { x: 0, y: 0 },
+              data: {
+                title: "🚀 Design Thinking Workspace (กระบวนการคิดเชิงออกแบบ)",
+                status: "in-progress",
+                depth: 0,
+                type: "root",
+                color: "blue",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: eId,
+              type: "task",
+              position: { x: -350, y: 150 },
+              data: {
+                title: "1. เข้าใจผู้ใช้ (Empathize)",
+                status: "todo",
+                depth: 1,
+                type: "empathize",
+                color: "pink",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: cE1,
+              type: "task",
+              position: { x: -450, y: 280 },
+              data: {
+                title: "สัมภาษณ์ผู้ใช้งานหลัก 5 คน",
+                status: "done",
+                depth: 2,
+                type: "empathize",
+                color: "default",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: cE2,
+              type: "task",
+              position: { x: -250, y: 280 },
+              data: {
+                title: "สร้าง Empathy Map (Say/Do/Think/Feel)",
+                status: "todo",
+                depth: 2,
+                type: "empathize",
+                color: "default",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: dId,
+              type: "task",
+              position: { x: -100, y: 150 },
+              data: {
+                title: "2. นิยามปัญหา (Define)",
+                status: "todo",
+                depth: 1,
+                type: "define",
+                color: "yellow",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: cD1,
+              type: "task",
+              position: { x: -100, y: 280 },
+              data: {
+                title: "ตั้งคำถาม How Might We...? (เราจะทำอย่างไรให้...)",
+                status: "todo",
+                depth: 2,
+                type: "define",
+                color: "default",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: iId,
+              type: "task",
+              position: { x: 100, y: 150 },
+              data: {
+                title: "3. คิดไอเดีย (Ideate)",
+                status: "todo",
+                depth: 1,
+                type: "ideate",
+                color: "yellow",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: cI1,
+              type: "task",
+              position: { x: 100, y: 280 },
+              data: {
+                title: "ระดมสมองและจัดกลุ่มไอเดียด้วยฟีเจอร์ Mindmap",
+                status: "todo",
+                depth: 2,
+                type: "ideate",
+                color: "default",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: pId,
+              type: "task",
+              position: { x: 300, y: 150 },
+              data: {
+                title: "4. ต้นแบบ (Prototype)",
+                status: "todo",
+                depth: 1,
+                type: "prototype",
+                color: "purple",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: cP1,
+              type: "task",
+              position: { x: 300, y: 280 },
+              data: {
+                title: "สร้าง Figma Mockup และ User Flow อย่างง่าย",
+                status: "todo",
+                depth: 2,
+                type: "prototype",
+                color: "default",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: tId,
+              type: "task",
+              position: { x: 500, y: 150 },
+              data: {
+                title: "5. ทดสอบ (Test)",
+                status: "todo",
+                depth: 1,
+                type: "test",
+                color: "green",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: cT1,
+              type: "task",
+              position: { x: 500, y: 280 },
+              data: {
+                title: "ทำ User Testing และเก็บฟีดแบกมาปรับปรุง",
+                status: "todo",
+                depth: 2,
+                type: "test",
+                color: "default",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+          ];
+
+          const edges: Edge[] = [
+            { id: "e-root-e", source: rootId, target: eId, data: { type: "hierarchy" } },
+            { id: "e-e-ce1", source: eId, target: cE1, data: { type: "hierarchy" } },
+            { id: "e-e-ce2", source: eId, target: cE2, data: { type: "hierarchy" } },
+            { id: "e-root-d", source: rootId, target: dId, data: { type: "hierarchy" } },
+            { id: "e-d-cd1", source: dId, target: cD1, data: { type: "hierarchy" } },
+            { id: "e-root-i", source: rootId, target: iId, data: { type: "hierarchy" } },
+            { id: "e-i-ci1", source: iId, target: cI1, data: { type: "hierarchy" } },
+            { id: "e-root-p", source: rootId, target: pId, data: { type: "hierarchy" } },
+            { id: "e-p-cp1", source: pId, target: cP1, data: { type: "hierarchy" } },
+            { id: "e-root-t", source: rootId, target: tId, data: { type: "hierarchy" } },
+            { id: "e-t-ct1", source: tId, target: cT1, data: { type: "hierarchy" } },
+          ];
+
+          set({
+            nodes: wireData(nodes),
+            edges,
+            isLoading: false,
+          });
+          setTimeout(() => get().applyLayout(), 100);
+          get().saveToFirestore();
+        },
+
+        createCriticalThinkingBoard: () => {
+          const rootId = "root";
+          const claimId = uuidv4();
+          const premAId = uuidv4();
+          const premBId = uuidv4();
+          const evidAId = uuidv4();
+          const objId = uuidv4();
+          const fallacyId = uuidv4();
+
+          const nodes: TaskNode[] = [
+            {
+              id: rootId,
+              type: "task",
+              position: { x: 0, y: 0 },
+              data: {
+                title: "🤔 Critical Thinking Workspace (แผนภูมิวิเคราะห์เหตุผล)",
+                status: "in-progress",
+                depth: 0,
+                type: "root",
+                color: "blue",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: claimId,
+              type: "task",
+              position: { x: 0, y: 150 },
+              data: {
+                title: "ข้อสรุปหลัก (Main Claim): การทำงานแบบ Remote ช่วยเพิ่ม Productivity",
+                status: "todo",
+                depth: 1,
+                type: "claim",
+                color: "blue",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: premAId,
+              type: "task",
+              position: { x: -250, y: 300 },
+              data: {
+                title: "เหตุผลสนับสนุน A: พนักงานประหยัดเวลาเดินทาง",
+                status: "todo",
+                depth: 2,
+                type: "premise",
+                color: "purple",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: evidAId,
+              type: "task",
+              position: { x: -250, y: 430 },
+              data: {
+                title: "หลักฐาน: ผลวิจัยพบว่าพนักงานประหยัดเวลาเฉลี่ย 1.5 ชม./วัน",
+                status: "todo",
+                depth: 3,
+                type: "evidence",
+                color: "green",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: premBId,
+              type: "task",
+              position: { x: 250, y: 300 },
+              data: {
+                title: "เหตุผลสนับสนุน B: สภาพแวดล้อมที่บ้านเงียบสงบและมีสมาธิมากกว่า",
+                status: "todo",
+                depth: 2,
+                type: "premise",
+                color: "purple",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: objId,
+              type: "task",
+              position: { x: 0, y: 300 },
+              data: {
+                title: "ข้อคัดค้าน (Objection): พนักงานบางส่วนรู้สึกโดดเดี่ยวและสื่อสารช้าลง",
+                status: "todo",
+                depth: 2,
+                type: "objection",
+                color: "pink",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: fallacyId,
+              type: "task",
+              position: { x: 0, y: 430 },
+              data: {
+                title: "ระวังเหตุผลวิบัติ (Fallacy): คิดว่าทุกคนมีห้องทำงานส่วนตัวที่เงียบสงบ",
+                status: "todo",
+                depth: 3,
+                type: "fallacy",
+                color: "yellow",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+          ];
+
+          const edges: Edge[] = [
+            { id: "e-root-claim", source: rootId, target: claimId, data: { type: "related" } },
+            { id: "e-premA-claim", source: premAId, target: claimId, data: { type: "supports" } },
+            { id: "e-evidA-premA", source: evidAId, target: premAId, data: { type: "supports" } },
+            { id: "e-premB-claim", source: premBId, target: claimId, data: { type: "supports" } },
+            { id: "e-obj-claim", source: objId, target: claimId, data: { type: "refutes" } },
+            { id: "e-fallacy-obj", source: fallacyId, target: objId, data: { type: "refutes" } },
+          ];
+
+          set({
+            nodes: wireData(nodes),
+            edges,
+            isLoading: false,
+          });
+          setTimeout(() => get().applyLayout(), 100);
+          get().saveToFirestore();
+        },
+
+        createSystemsThinkingBoard: () => {
+          const rootId = "root";
+          const stockId = uuidv4();
+          const flowInId = uuidv4();
+          const flowOutId = uuidv4();
+          const varId = uuidv4();
+
+          const nodes: TaskNode[] = [
+            {
+              id: rootId,
+              type: "task",
+              position: { x: 0, y: 0 },
+              data: {
+                title: "🔄 Systems Thinking Workspace (แผนผังระบบ Causal Loop)",
+                status: "in-progress",
+                depth: 0,
+                type: "root",
+                color: "blue",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: stockId,
+              type: "task",
+              position: { x: 0, y: 180 },
+              data: {
+                title: "อ่างสะสม (Stock): จำนวนพนักงานในบริษัท",
+                status: "todo",
+                depth: 1,
+                type: "stock",
+                color: "default",
+                initialValue: 120,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: flowInId,
+              type: "task",
+              position: { x: -250, y: 180 },
+              data: {
+                title: "อัตราไหลเข้า (Flow In): อัตราการจ้างงานใหม่",
+                status: "todo",
+                depth: 2,
+                type: "flow",
+                color: "blue",
+                flowRate: 5,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: flowOutId,
+              type: "task",
+              position: { x: 250, y: 180 },
+              data: {
+                title: "อัตราไหลออก (Flow Out): อัตราการลาออก",
+                status: "todo",
+                depth: 2,
+                type: "flow",
+                color: "pink",
+                flowRate: 2,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+            {
+              id: varId,
+              type: "task",
+              position: { x: -250, y: 300 },
+              data: {
+                title: "ตัวแปรเสริม (Variable): อัตราการเติบโตธุรกิจ",
+                status: "todo",
+                depth: 2,
+                type: "variable",
+                color: "purple",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            },
+          ];
+
+          const edges: Edge[] = [
+            { id: "e-root-stock", source: rootId, target: stockId, data: { type: "related" } },
+            { id: "e-flowin-stock", source: flowInId, target: stockId, data: { type: "positive_influence" } },
+            { id: "e-flowout-stock", source: flowOutId, target: stockId, data: { type: "negative_influence" } },
+            { id: "e-var-flowin", source: varId, target: flowInId, data: { type: "positive_influence" } },
+            { id: "e-stock-flowout", source: stockId, target: flowOutId, data: { type: "positive_influence" } },
+          ];
+
+          set({
+            nodes: wireData(nodes),
+            edges,
             isLoading: false,
           });
           setTimeout(() => get().applyLayout(), 100);

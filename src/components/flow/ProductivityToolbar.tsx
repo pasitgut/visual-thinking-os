@@ -1,9 +1,17 @@
 "use client";
 
-import { Command, LayoutGrid, Maximize, Plus, Search, Zap } from "lucide-react";
+import { Brain, Command, LayoutGrid, Maximize, Plus, Search, Zap } from "lucide-react";
 import { useReactFlow } from "reactflow";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -46,7 +54,7 @@ export const ProductivityToolbar = () => {
   return (
     <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
       <TooltipProvider>
-        <div className="flex items-center gap-0.5 p-1 bg-background/80 backdrop-blur-md border rounded-xl shadow-lg pointer-events-auto animate-in slide-in-from-top-4 duration-500">
+        <div className="flex items-center gap-0.5 p-1 bg-background/70 backdrop-blur-lg border border-border/40 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] pointer-events-auto animate-in slide-in-from-top-4 duration-500">
           <Tooltip>
             <TooltipTrigger
               className={cn(
@@ -90,6 +98,40 @@ export const ProductivityToolbar = () => {
             </TooltipTrigger>
             <TooltipContent side="bottom">Add Task</TooltipContent>
           </Tooltip>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon" }),
+                "h-8 w-8 cursor-pointer text-muted-foreground hover:text-primary",
+              )}
+              title="Thinking Frameworks"
+            >
+              <Brain className="h-3.5 w-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" side="bottom" className="w-56 z-50 bg-background border border-border rounded-xl shadow-lg p-1">
+              <DropdownMenuLabel className="px-2 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Thinking Templates</DropdownMenuLabel>
+              <DropdownMenuSeparator className="-mx-1 my-1 border-t border-border" />
+              <DropdownMenuItem
+                className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                onClick={() => useTaskStore.getState().createDesignThinkingBoard()}
+              >
+                <span>🎨</span> Design Thinking Board
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                onClick={() => useTaskStore.getState().createCriticalThinkingBoard()}
+              >
+                <span>🤔</span> Critical Thinking Board
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                onClick={() => useTaskStore.getState().createSystemsThinkingBoard()}
+              >
+                <span>🔄</span> Systems Thinking Board
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Tooltip>
             <TooltipTrigger

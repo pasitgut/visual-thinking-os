@@ -69,11 +69,11 @@ const COLOR_OVERRIDES: Record<Exclude<TaskColor, "default">, string> = {
 };
 
 const ROOT_COLOR_OVERRIDES: Record<Exclude<TaskColor, "default">, string> = {
-  blue: "bg-blue-600 border-blue-400",
-  green: "bg-emerald-600 border-emerald-400",
-  purple: "bg-purple-600 border-purple-400",
-  pink: "bg-pink-600 border-pink-400",
-  yellow: "bg-amber-500 border-amber-400",
+  blue: "bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-400/50 shadow-blue-500/20",
+  green: "bg-gradient-to-br from-emerald-600 to-teal-700 border-emerald-400/50 shadow-emerald-500/20",
+  purple: "bg-gradient-to-br from-purple-600 to-fuchsia-700 border-purple-400/50 shadow-purple-500/20",
+  pink: "bg-gradient-to-br from-pink-600 to-rose-700 border-pink-400/50 shadow-pink-500/20",
+  yellow: "bg-gradient-to-br from-amber-500 to-orange-600 border-amber-400/50 shadow-amber-500/20",
 };
 
 export const TaskNode = memo(
@@ -358,7 +358,7 @@ export const TaskNode = memo(
       return (
         <div
           className={cn(
-            "w-full h-auto min-h-[48px] min-w-[160px] rounded-xl border-2 px-3 py-2.5 transition-all duration-300 flex flex-col gap-1 shadow-md",
+            "w-full h-auto min-h-[48px] min-w-[160px] rounded-xl border-2 pl-[18px] pr-3 py-2.5 transition-all duration-300 flex flex-col gap-1 shadow-md relative overflow-hidden backdrop-blur-xs hover:translate-y-[-2px] hover:shadow-lg hover:border-zinc-400/30 dark:hover:border-zinc-500/30",
             nodeColor === "default"
               ? registryEntry.className
               : COLOR_OVERRIDES[nodeColor as Exclude<TaskColor, "default">],
@@ -366,11 +366,15 @@ export const TaskNode = memo(
               ? "border-primary ring-4 ring-primary/10 scale-105 z-10"
               : "border-transparent",
             nodeType === "idea" && "border-dashed",
+            nodeType === "stock" && "border-double border-4 rounded-none font-mono",
+            nodeType === "flow" && "rounded-full px-6 py-2.5 border-cyan-400/80",
+            nodeType === "variable" && "rounded-full border-fuchsia-400/80",
             isImportant &&
               "shadow-[0_0_20px_rgba(251,191,36,0.3)] border-amber-400/50",
           )}
           onDoubleClick={handleStartEditing}
         >
+          <div className="absolute left-0 top-0 bottom-0 w-[5px] bg-current opacity-80" />
           <div className="flex items-center gap-3 w-full">
             {!isMid && (
               <div
@@ -442,6 +446,17 @@ export const TaskNode = memo(
                   )}
                 >
                   {data.title || "Untitled"}
+                </div>
+              )}
+
+              {nodeType === "stock" && !isMid && (
+                <div className="text-[10px] font-mono px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded flex-shrink-0 border border-slate-300/40">
+                  Value: {data.initialValue ?? 0}
+                </div>
+              )}
+              {nodeType === "flow" && !isMid && (
+                <div className="text-[10px] font-mono px-2 py-0.5 bg-cyan-100 dark:bg-cyan-900/60 text-cyan-800 dark:text-cyan-200 rounded flex-shrink-0 border border-cyan-300/40">
+                  Rate: {data.flowRate ?? 0}/mo
                 </div>
               )}
 

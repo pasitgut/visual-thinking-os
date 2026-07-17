@@ -494,7 +494,7 @@ const BoardContent = () => {
 
 export const MindmapBoard = () => {
   return (
-    <div className="w-full h-full bg-background">
+    <div className="w-full h-full bg-background canvas-grid-bg">
       <BoardContent />
     </div>
   );

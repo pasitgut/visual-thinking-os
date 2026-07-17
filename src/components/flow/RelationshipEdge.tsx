@@ -39,6 +39,24 @@ const RELATIONSHIP_CONFIG: Record<
     dashArray: "2 2",
     icon: "💡",
   },
+  supports: { label: "Supports", color: "#10b981", icon: "👍" },
+  refutes: { label: "Refutes", color: "#ef4444", icon: "👎" },
+  assumes_dep: {
+    label: "Assumes",
+    color: "#f97316",
+    dashArray: "3 3",
+    icon: "💭",
+  },
+  positive_influence: {
+    label: "Reinforces (+)",
+    color: "#3b82f6",
+    icon: "➕",
+  },
+  negative_influence: {
+    label: "Balances (-)",
+    color: "#ec4899",
+    icon: "➖",
+  },
 };
 
 export const RelationshipEdge = memo((props: EdgeProps<TaskEdgeData>) => {

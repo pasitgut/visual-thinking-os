@@ -145,11 +145,11 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-6 bg-background">
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-6 bg-background canvas-grid-bg">
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Visual Mindmap</h1>
-          <p className="text-muted-foreground">
-            Manage your tasks visually and hierarchically.
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-indigo-600 to-primary bg-clip-text text-transparent">Visual Thinking OS</h1>
+          <p className="text-muted-foreground text-sm font-medium">
+            Thinking space for Design, Critical, and Systems Thinking.
           </p>
         </div>
         <LoginButton />
@@ -173,10 +173,10 @@ export default function Home() {
       <DndHandler>
         <main className="flex flex-col h-screen w-screen overflow-hidden">
           {/* Header */}
-          <header className="flex h-14 items-center justify-between border-b px-4 sm:px-6 bg-background z-50">
+          <header className="flex h-14 items-center justify-between border-b border-border/40 px-4 sm:px-6 bg-background/80 backdrop-blur-md z-50">
             <div className="flex items-center gap-2 sm:gap-4">
-              <span className="font-bold text-lg sm:text-xl truncate max-w-[120px] sm:max-w-none">
-                Visual Mindmap
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-primary to-indigo-600 dark:to-indigo-400 bg-clip-text text-transparent">
+                Visual Thinking OS
               </span>
               <Separator
                 orientation="vertical"

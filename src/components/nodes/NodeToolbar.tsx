@@ -15,6 +15,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { NODE_REGISTRY } from "@/features/task/nodeRegistry";
 import { useDeviceSpec } from "@/hooks/useDeviceSpec";
 import { cn } from "@/lib/utils";
@@ -54,19 +62,6 @@ const COLORS: { value: TaskColor; class: string }[] = [
   },
   { value: "pink", class: "bg-pink-400 dark:bg-pink-500 border-pink-500" },
   { value: "yellow", class: "bg-amber-400 dark:bg-amber-500 border-amber-500" },
-];
-
-const TYPES: { value: TaskType; icon: LucideIcon; label: string }[] = [
-  { value: "task", icon: NODE_REGISTRY.task.icon, label: "ต้องทำ" },
-  { value: "idea", icon: NODE_REGISTRY.idea.icon, label: "ไอเดีย" },
-  { value: "problem", icon: NODE_REGISTRY.problem.icon, label: "ปัญหา" },
-  { value: "decision", icon: NODE_REGISTRY.decision.icon, label: "สรุปแล้ว" },
-  { value: "question", icon: NODE_REGISTRY.question.icon, label: "คำถาม" },
-  {
-    value: "reference",
-    icon: NODE_REGISTRY.reference.icon,
-    label: "อ้างอิง",
-  },
 ];
 
 export const NodeToolbar = ({
@@ -224,29 +219,95 @@ export const NodeToolbar = ({
         <>
           <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
 
-          {/* Semantic Type Section */}
-          <div className="flex items-center gap-1">
-            {TYPES.map((t) => (
-              <button
-                type="button"
-                key={t.value}
-                className={cn(
-                  "flex items-center justify-center rounded-lg transition-all active:scale-95",
-                  btnClass,
-                  type === t.value
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
-                    : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-muted-foreground",
-                )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTypeChange(t.value);
-                }}
-                title={t.label}
-              >
-                <t.icon className={iconClass} />
-              </button>
-            ))}
-          </div>
+           {/* Semantic Type Section */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={cn(
+                "flex items-center justify-center gap-1.5 px-2 px-3 rounded-lg border border-border bg-background hover:bg-muted text-foreground transition-all active:scale-95 font-medium text-xs whitespace-nowrap",
+                btnClass === "h-10 w-10" ? "h-10 min-w-[100px]" : "h-8 min-w-[80px]"
+              )}
+              title="เปลี่ยนประเภทโหนด"
+            >
+              {(() => {
+                const reg = NODE_REGISTRY[type] || NODE_REGISTRY.child;
+                const CurrentIcon = reg.icon;
+                return (
+                  <>
+                    <CurrentIcon className={cn(iconClass, "mr-1 text-primary")} />
+                    <span className="max-w-[100px] truncate">{reg.label}</span>
+                  </>
+                );
+              })()}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" className="w-56 z-50 bg-background border border-border rounded-xl shadow-lg p-1 max-h-[80vh] overflow-y-auto custom-scrollbar">
+              <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">ทั่วไป</DropdownMenuLabel>
+              {(["task", "idea", "problem", "decision", "question", "reference"] as TaskType[]).map((val) => {
+                const reg = NODE_REGISTRY[val];
+                const ItemIcon = reg.icon;
+                return (
+                  <DropdownMenuItem
+                    key={val}
+                    onClick={() => onTypeChange(val)}
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                  >
+                    <ItemIcon className="h-4 w-4" />
+                    <span>{reg.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+              
+              <DropdownMenuSeparator className="-mx-1 my-1 border-t border-border" />
+              <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Design Thinking</DropdownMenuLabel>
+              {(["empathize", "define", "ideate", "prototype", "test"] as TaskType[]).map((val) => {
+                const reg = NODE_REGISTRY[val];
+                const ItemIcon = reg.icon;
+                return (
+                  <DropdownMenuItem
+                    key={val}
+                    onClick={() => onTypeChange(val)}
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                  >
+                    <ItemIcon className="h-4 w-4 text-rose-500" />
+                    <span>{reg.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+
+              <DropdownMenuSeparator className="-mx-1 my-1 border-t border-border" />
+              <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold text-sky-500 dark:text-sky-400 uppercase tracking-wider">Critical Thinking</DropdownMenuLabel>
+              {(["claim", "premise", "evidence", "assumption", "objection", "fallacy"] as TaskType[]).map((val) => {
+                const reg = NODE_REGISTRY[val];
+                const ItemIcon = reg.icon;
+                return (
+                  <DropdownMenuItem
+                    key={val}
+                    onClick={() => onTypeChange(val)}
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                  >
+                    <ItemIcon className="h-4 w-4 text-sky-500" />
+                    <span>{reg.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+
+              <DropdownMenuSeparator className="-mx-1 my-1 border-t border-border" />
+              <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold text-cyan-500 dark:text-cyan-400 uppercase tracking-wider">Systems Thinking</DropdownMenuLabel>
+              {(["stock", "flow", "variable"] as TaskType[]).map((val) => {
+                const reg = NODE_REGISTRY[val];
+                const ItemIcon = reg.icon;
+                return (
+                  <DropdownMenuItem
+                    key={val}
+                    onClick={() => onTypeChange(val)}
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                  >
+                    <ItemIcon className="h-4 w-4 text-cyan-500" />
+                    <span>{reg.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
 
